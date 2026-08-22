@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجر الطباعة والتغليف</title>
+    <style>
+        :root { --primary: #0d6efd; --bg: #f8f9fa; --card-bg: #ffffff; --text: #212529; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: var(--card-bg); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .price-display { font-size: 1.25rem; font-weight: bold; color: var(--primary); margin: 15px 0; }
+        button { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+        button:hover { opacity: 0.9; }
+        .btn-success { background: #25d366; }
+        .btn-admin { background: #6c757d; max-width: 150px; }
+        #admin-panel { display: none; margin-top: 30px; border-top: 2px dashed #ccc; padding-top: 20px; }
+        .product-manager { background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>متجر الطباعة والتغليف</h1>
+        <button class="btn-admin" onclick="toggleAdmin()">لوحة التحكم</button>
+    </header>
+
+    <!-- قسم المتجر -->
+    <div id="shop-section" class="grid"></div>
+
+    <!-- لوحة التحكم (إدارة المنتجات والأسعار) -->
+    <div id="admin-panel">
+        <h2>لوحة تحكم إدارة الأسعار والمنتجات</h2>
+        <div class="card">
+            <h3>إضافة / تعديل منتج</h3>
+            <div class="form-group">
+                <label>اسم المنتج (مثل: علب بقلاوة / كارتون):</label>
+                <input type="text" id="admin-name" placeholder="علبة كارتون">
+            </div>
+            <div class="form-group">
+                <label>سعر القطعة للكمية العادية (أقل من 500):</label>
+                <input type="number" id="admin-p1" placeholder="1000">
+            </div>
+            <div class="form-group">
+                <label>سعر القطعة للكمية المتوسطة (500 - 999):</label>
+                <input type="number" id="admin-p2" placeholder="750">
+            </div>
+            <div class="form-group">
+                <label>سعر القطعة للكميات الكبيرة (1000 فما فوق):</label>
+                <input type="number" id="admin-p3" placeholder="500">
+            </div>
+            <div class="form-group">
+                <label>تكلفة إضافة السولوفان للقطعة:</label>
+                <input type="number" id="admin-lam" placeholder="50">
+            </div>
+            <div class="form-group">
+                <label>تكلفة إضافة البصمة للقطعة:</label>
+                <input type="number" id="admin-foil" placeholder="100">
+            </div>
+            <button onclick="saveProduct()">حفظ المنتج</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // الرقم الذي سيوجه له الطلب على الواتساب (مع الرمز الدولي بدون +)
+    const whatsappNumber = "9647000000000"; 
+
+    // البيانات الافتراضية
+    const defaultProducts = [
+        { id: 1, name: "علب حلويات وشرقيات", p1: 1000, p2: 750, p3: 500, lam: 50, foil: 100 },
+        { id: 2, name: "أكياس ورقية (توت باج)", p1: 1200, p2: 900, p3: 650, lam: 75, foil: 150 }
+    ];
+
+    function getProducts() {
+        const stored = localStorage.getItem('store_products');
+        return stored ? JSON.parse(stored) : defaultProducts;
+    }
+
+    function renderShop() {
+        const products = getProducts();
+        const container = document.getElementById('shop-section');
+        container.innerHTML = '';
+
+        products.forEach(p => {
+            container.innerHTML += `
+                <div class="card" id="product-${p.id}">
+                    <h3>${p.name}</h3>
+                    <div class="form-group">
+                        <label>الكمية المطلوب طبعها:</label>
+                        <input type="number" value="100" min="1" id="qty-${p.id}" oninput="calculatePrice(${p.id})">
+                    </div>
+                    <div class="form-group">
+                        <label>نوع السولوفان:</label>
+                        <select id="lam-${p.id}" onchange="calculatePrice(${p.id})">
+                            <option value="0">بدون سولوفان</option>
+                            <option value="${p.lam}">سولوفان مات / لامع (+${p.lam})</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>إضافة بصمة حرارية (Foil):</label>
+                        <select id="foil-${p.id}" onchange="calculatePrice(${p.id})">
+                            <option value="0">بدون بصمة</option>
+                            <option value="${p.foil}">بصمة ذهبية / فضية (+${p.foil})</option>
+                        </select>
+                    </div>
+                    <div class="price-display">السعر الإجمالي: <span id="total-${p.id}">0</span> د.ع</div>
+                    <button class="btn-success" onclick="sendToWhatsApp(${p.id})">إرسال الطلب عبر الواتساب</button>
+                </div>
+            `;
+            calculatePrice(p.id);
+        });
+    }
+
+    function calculatePrice(pId) {
+        const products = getProducts();
+        const p = products.find(item => item.id === pId);
+        const qty = parseInt(document.getElementById(`qty-${pId}`).value) || 0;
+        const lamCost = parseInt(document.getElementById(`lam-${pId}`).value);
+        const foilCost = parseInt(document.getElementById(`foil-${pId}`).value);
+
+        let unitPrice = p.p1;
+        if (qty >= 1000) unitPrice = p.p3;
+        else if (qty >= 500) unitPrice = p.p2;
+
+        const totalPerUnit = unitPrice + lamCost + foilCost;
+        const grandTotal = totalPerUnit * qty;
+
+        document.getElementById(`total-${pId}`).innerText = grandTotal.toLocaleString();
+    }
+
+    function sendToWhatsApp(pId) {
+        const products = getProducts();
+        const p = products.find(item => item.id === pId);
+        const qty = document.getElementById(`qty-${pId}`).value;
+        const lamText = document.getElementById(`lam-${pId}`).selectedOptions[0].text;
+        const foilText = document.getElementById(`foil-${pId}`).selectedOptions[0].text;
+        const total = document.getElementById(`total-${pId}`).innerText;
+
+        const message = `*طلب جديد من المتجر*%0A%0A` +
+            `• *المنتج:* ${p.name}%0A` +
+            `• *الكمية:* ${qty}%0A` +
+            `• *السولوفان:* ${lamText}%0A` +
+            `• *البصمة:* ${foilText}%0A` +
+            `• *السعر الإجمالي:* ${total} د.ع`;
+
+        window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+    }
+
+    function toggleAdmin() {
+        const panel = document.getElementById('admin-panel');
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function saveProduct() {
+        const name = document.getElementById('admin-name').value;
+        const p1 = parseInt(document.getElementById('admin-p1').value);
+        const p2 = parseInt(document.getElementById('admin-p2').value);
+        const p3 = parseInt(document.getElementById('admin-p3').value);
+        const lam = parseInt(document.getElementById('admin-lam').value);
+        const foil = parseInt(document.getElementById('admin-foil').value);
+
+        if (!name || !p1) return alert('يرجى كتابة الاسم والأسعار الرئيسية');
+
+        const products = getProducts();
+        products.push({ id: Date.now(), name, p1, p2, p3, lam: lam||0, foil: foil||0 });
+        localStorage.setItem('store_products', JSON.stringify(products));
+
+        renderShop();
+        alert('تم إضافة المنتج بنجاح!');
+    }
+
+    renderShop();
+</script>
+</body>
+</html>
