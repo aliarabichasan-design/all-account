@@ -172,6 +172,7 @@ document.addEventListener("input",function(e){var t=e.target;
  if(t.id&&/^(jn|jc|qty|per|margin|adv)$/.test(t.id)){S.form[t.id]=t.value;save()}
  if(t.closest("#calc"))calc()});
 document.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var d=b.dataset;
+ if(d.cinv)showInvMulti(decodeURIComponent(d.cinv));
  if(d.inv){var jj=S.jobs.find(function(x){return x.id===d.inv});if(jj)showInv({name:jj.name,cust:jj.cust,qty:jj.qty,sheets:jj.sheets,det:jj.det||(jj.items||[]).map(function(t){return{k:t,t:t}}),gsm:jj.gsm,price:jj.price,paid:jj.paid,date:jj.date,id:jj.id})}
  if(d.t){document.querySelectorAll("nav button,section").forEach(function(x){x.classList.remove("on")});b.classList.add("on");$(d.t).classList.add("on");if(d.t==="jobs")jobs()}
  if(d.pay){var j=S.jobs.find(function(x){return x.id===d.pay}),rem=j.price-j.paid,a=+prompt("مبلغ التسديد (المتبقي "+n(rem)+")",rem);if(a>0){j.paid+=Math.min(a,rem);save();jobs()}}
@@ -180,14 +181,18 @@ $("save").onclick=function(){
  if(!cur.price){alert("فعّل عملية واحدة على الأقل واكتب سعرها");return}
  var adv=Math.min(num($("adv").value),cur.price);
  S.jobs.unshift({id:Date.now().toString(36),date:new Date().toISOString().slice(0,10),name:cur.name||"شغلة بدون اسم",cust:cur.cust,qty:cur.qty,cost:cur.cost,price:cur.price,paid:adv,det:cur.det,sheets:cur.sheets,gsm:cur.gsm});
- save();$("jn").value=$("jc").value="";$("adv").value=0;S.form.jn=S.form.jc="";S.form.adv="0";save();
+ save();$("jn").value="";$("adv").value=0;S.form.jn="";S.form.adv="0";save();
  document.querySelector('nav [data-t="jobs"]').click();
 };
 function jobs(){
  var t=0,rem=0;S.jobs.forEach(function(j){t+=j.price;rem+=j.price-j.paid});
  $("t1").textContent=nf(t);$("t2").textContent=nf(rem);
- $("jl").innerHTML=S.jobs.length?S.jobs.map(function(j){var m=j.price-j.paid;
-  return '<div class="it"><div><b>'+esc(j.name)+'</b><small>'+esc(j.cust||"بدون زبون")+' · '+nf(j.qty)+' قطعة · '+j.date+'</small><small>السعر '+nf(j.price)+' · الربح '+nf(j.price-j.cost)+'</small></div><div style="text-align:left"><div class="'+(m>0?'bad':'ok')+'">'+(m>0?'متبقي '+nf(m):'مسددة')+'</div>'+(m>0?'<button class="s" data-pay="'+j.id+'">تسديد</button> ':'')+'<button class="s" data-inv="'+j.id+'">فاتورة</button> <button class="s" data-del="'+j.id+'">حذف</button></div></div>'}).join(""):'<div class="empty">ما أكو شغلات محفوظة. احسب شغلة واضغط "احفظ الشغلة".</div>';
+ var gs={},ord=[];S.jobs.forEach(function(j){var k=j.cust||"";if(!gs[k]){gs[k]=[];ord.push(k)}gs[k].push(j)});
+ $("jl").innerHTML=S.jobs.length?ord.map(function(k){var g=gs[k],gt=0,gr=0;g.forEach(function(j){gt+=j.price;gr+=j.price-j.paid});
+  return '<div style="margin-bottom:12px"><div class="it" style="border-bottom:2px solid var(--gold)"><div><b>'+esc(k||"بدون زبون")+'</b><small>'+g.length+' عمل · المجموع '+nf(gt)+' · المتبقي '+nf(gr)+'</small></div>'+(k?'<button class="s" data-cinv="'+encodeURIComponent(k)+'">فاتورة الزبون</button>':'')+'</div>'+g.map(jobRow).join("")+'</div>'}).join(""):'<div class="empty">ما أكو شغلات محفوظة. احسب شغلة واضغط "احفظ الشغلة".</div>';
+}
+function jobRow(j){var m=j.price-j.paid;
+ return '<div class="it"><div><b>'+esc(j.name)+'</b><small>'+nf(j.qty)+' قطعة · '+j.date+'</small><small>السعر '+nf(j.price)+' · الربح '+nf(j.price-j.cost)+'</small></div><div style="text-align:left"><div class="'+(m>0?'bad':'ok')+'">'+(m>0?'متبقي '+nf(m):'مسددة')+'</div>'+(m>0?'<button class="s" data-pay="'+j.id+'">تسديد</button> ':'')+'<button class="s" data-inv="'+j.id+'">فاتورة</button> <button class="s" data-del="'+j.id+'">حذف</button></div></div>'
 }
 $("exp").onclick=function(){var a=document.createElement("a");a.href="data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(S));a.download="print-backup-"+new Date().toISOString().slice(0,10)+".json";a.click()};
 $("imp").onclick=function(){$("file").click()};
@@ -201,6 +206,12 @@ $("reset").onclick=function(){
  var d={jn:"",jc:"",qty:"",per:"",margin:"0",adv:"0"};S.form=d;for(var k in d)$(k).value=d[k];
  save();buildProcs();document.querySelectorAll("input").forEach(fmtEl);calc();
 };
+function renderMulti(){var o=INV,rem=o.price-o.paid;
+ $("invbody").innerHTML=(S.logo?'<img src="'+S.logo+'" alt="BAN" style="display:block;max-height:80px;max-width:60%;margin:0 auto 8px">':"")+'<h2 id="offname" contenteditable="true" style="margin:0 0 2px;text-align:center">'+esc(S.office||"BAN")+'</h2><div style="text-align:center;font-size:22px;font-weight:600;margin-bottom:12px">فاتورة</div>'+
+ '<div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px"><span>التاريخ: '+o.date+'</span></div>'+irow("الزبون",o.cust)+
+ o.jobs.map(function(j){var d=jdet(j);return '<div style="padding:8px 0;border-bottom:1px solid #ddd"><div style="display:flex;justify-content:space-between"><b>'+esc(j.name||"—")+'</b><b>'+nf(j.price)+' د.ع</b></div><div style="font-size:14px;color:#444">الكمية: '+nf(j.qty)+' قطعة'+(j.qty>0?' · سعر الوحدة: '+nf(j.price/j.qty)+' د.ع':'')+(d?'<br>'+esc(d):'')+'</div></div>'}).join("")+
+ '<div style="border-top:2px solid #111;margin-top:14px;padding-top:10px;display:flex;justify-content:space-between;font-size:20px;font-weight:700"><span>المجموع النهائي</span><span>'+nf(o.price)+' د.ع</span></div>'+
+ (o.paid>0?irow("الدفعة",nf(o.paid)+" د.ع")+irow("المتبقي",rem>0?nf(rem)+" د.ع":"مسدد"):"")}
 function irow(l,v){return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #ddd"><span>'+l+'</span><b>'+esc(v)+'</b></div>'}
 var INV=null;
 function loadLogo(file){if(!file)return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var m=Math.min(1,400/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*m);c.height=Math.round(im.height*m);var x=c.getContext("2d");x.drawImage(im,0,0,c.width,c.height);var u=c.toDataURL("image/png");if(u.length>120000){x.globalCompositeOperation="destination-over";x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);u=c.toDataURL("image/jpeg",.85)}S.logo=u;save();renderInv()};im.src=r.result};r.readAsDataURL(file)}
@@ -215,7 +226,12 @@ function showInv(o){INV=o;var dt=o.det||[],lm=dt.filter(function(x){return x.k==
  '<label style="'+cb+'"><input type="checkbox" id="invfoil" style="width:22px;height:22px"> التذهيب (فويل)</label>';
  $("invlam").value=INV.lam;$("invfoil").checked=INV.foil;$("invg").checked=!(S.invsel&&S.invsel.gsm===false);
  renderInv();$("inv").hidden=false;$("inv").scrollTop=0}
-function renderInv(){var o=INV,rem=o.price-o.paid,it=[];
+function jdet(j){var a=[];if(j.gsm>0)a.push("وزن الكارتون: "+nf(j.gsm)+" غم");(j.det||[]).forEach(function(x){if(x.k==="lam")a.push(/وجهين/.test(x.t)?"سلفان وجهين":"سلفان وجه واحد");if(x.k==="foil")a.push("التذهيب (فويل)")});return a.join(" · ")}
+function showInvMulti(c){var js=S.jobs.filter(function(j){return (j.cust||"")===c}),p=0,pd=0;js.forEach(function(j){p+=j.price;pd+=j.paid});
+ INV={multi:true,cust:c,jobs:js,price:p,paid:pd,date:new Date().toISOString().slice(0,10),id:"—"};
+ $("invsel").innerHTML='<div style="display:flex;gap:8px;align-items:end;margin:0 0 10px"><label style="margin:0;flex:1">شعار BAN (صورة)<input type="file" accept="image/*" id="invlogo"></label><button class="s" id="invlogodel">حذف الشعار</button></div><label style="margin:0">دفعة الزبون (د.ع)<input type="text" inputmode="numeric" id="invpay" value="'+(pd||"")+'"></label>';
+ renderInv();$("inv").hidden=false;$("inv").scrollTop=0}
+function renderInv(){var o=INV;if(o.multi){renderMulti();return}var rem=o.price-o.paid,it=[];
  if(o.gsm>0&&!(S.invsel&&S.invsel.gsm===false))it.push("وزن الكارتون: "+nf(o.gsm)+" غم");
  if(o.lam==="1")it.push("سلفان وجه واحد");if(o.lam==="2")it.push("سلفان وجهين");if(o.foil)it.push("التذهيب (فويل)");
  $("invbody").innerHTML=(S.logo?'<img src="'+S.logo+'" alt="BAN" style="display:block;max-height:80px;max-width:60%;margin:0 auto 8px">':"")+'<h2 id="offname" contenteditable="true" style="margin:0 0 2px;text-align:center">'+esc(S.office||"BAN")+'</h2><div style="text-align:center;font-size:22px;font-weight:600;margin-bottom:12px">فاتورة</div>'+
