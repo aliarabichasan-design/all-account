@@ -105,13 +105,14 @@ var PROCS=[["paper","الورق","sheet",0,1],["print","الطبع","bundle5",0,
 var S={rates:{},jobs:[]};
 PROCS.forEach(function(p){S.rates[p[0]]={on:!!p[4],price:p[3],basis:p[2]}});
 S.rates.extra={on:false,price:0,basis:"fixed"};
-S.paper={usd:0,pack:0,rate:0,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"};
+S.paper={usd:0,pack:0,rate:1700,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"};
 try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);S.jobs=d.jobs||[];for(var k in d.rates)S.rates[k]=d.rates[k];if(d.paper)Object.assign(S.paper,d.paper)}}catch(e){}
 if(!S.k1){if(S.rates.print.basis==="sheet")S.rates.print.basis="k1000";S.k1=1}
 if(!S.k2){if(S.rates.print.basis==="k1000"||S.rates.print.basis==="sheet")S.rates.print.basis="bundle";S.k2=1}
 if(!S.k3){if(S.rates.print.basis==="bundle")S.rates.print.basis="bundle5";S.k3=1}
 function save(){S.ts=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(window.remoteSave)remoteSave()}
 S.form=S.form||{};
+if(!S.k4){if(!S.paper.rate)S.paper.rate=1700;S.k4=1}
 var $=function(i){return document.getElementById(i)};
 function esc(t){var d=document.createElement("div");d.textContent=fixD(t);return d.innerHTML}
 function n(v){return Math.round(v).toLocaleString("en-US")}
@@ -196,13 +197,13 @@ function jobRow(j){var m=j.price-j.paid;
 }
 $("exp").onclick=function(){var a=document.createElement("a");a.href="data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(S));a.download="print-backup-"+new Date().toISOString().slice(0,10)+".json";a.click()};
 $("imp").onclick=function(){$("file").click()};
-$("file").onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var d=JSON.parse(rd.result);if(d.jobs&&d.rates){S=d;S.paper=Object.assign({usd:0,pack:0,rate:0,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"},S.paper||{});S.form=S.form||{};save();restoreForm();buildProcs();document.querySelectorAll("input").forEach(fmtEl);calc();jobs()}else alert("الملف مو نسخة احتياطية صحيحة")}catch(e){alert("تعذر قراءة الملف")}};rd.readAsText(f)};
+$("file").onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var d=JSON.parse(rd.result);if(d.jobs&&d.rates){S=d;S.paper=Object.assign({usd:0,pack:0,rate:1700,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"},S.paper||{});S.form=S.form||{};save();restoreForm();buildProcs();document.querySelectorAll("input").forEach(fmtEl);calc();jobs()}else alert("الملف مو نسخة احتياطية صحيحة")}catch(e){alert("تعذر قراءة الملف")}};rd.readAsText(f)};
 function restoreForm(){for(var id in S.form)if($(id))$(id).value=S.form[id]}
 restoreForm();buildProcs();document.querySelectorAll("input").forEach(fmtEl);calc();jobs();
 $("reset").onclick=function(){
  if(!confirm("تصفّر كل المدخلات والأسعار؟ الشغلات المحفوظة ما تنحذف."))return;
  var r={};PROCS.forEach(function(p){r[p[0]]={on:!!p[4],price:p[3],basis:p[2]}});r.extra={on:false,price:0,basis:"fixed"};
- S.rates=r;S.paper={usd:0,pack:0,rate:0,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"};
+ S.rates=r;S.paper={usd:0,pack:0,rate:1700,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"};
  var d={jn:"",jc:"",qty:"",per:"",margin:"0",adv:"0"};S.form=d;for(var k in d)$(k).value=d[k];
  save();buildProcs();document.querySelectorAll("input").forEach(fmtEl);calc();
 };
@@ -249,7 +250,7 @@ $("invclose").onclick=function(){$("inv").hidden=true};
 $("invprint").onclick=function(){try{window.print()}catch(e){alert("الطباعة غير متاحة هنا. صوّر الشاشة أو افتح الصفحة من المتصفح واطبع منه.")}};
 var _db=null,_t=null;
 function remoteSave(){if(!_db)return;clearTimeout(_t);_t=setTimeout(function(){_db.set({json:JSON.stringify(S),ts:S.ts||Date.now()}).catch(function(){})},800)}
-(async function(){try{if(!window.claude)return;var u=await claude.use("user"),d=await claude.use("db");if(!u||!d)return;var id=await u.id();if(!id)return;_db=d.collection("data/users/"+id).doc("state");var sn=await _db.get();if(sn.exists){var rm=JSON.parse(sn.data().json);if((rm.ts||0)>(S.ts||0)){var R=S.rates;S=rm;S.rates=S.rates||{};for(var k in R)if(!S.rates[k])S.rates[k]=R[k];S.paper=Object.assign({usd:0,pack:0,rate:0,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"},S.paper||{});S.form=S.form||{};try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}restoreForm();buildProcs();document.querySelectorAll("input").forEach(fmtEl);calc();jobs();return}}remoteSave()}catch(e){}})();
+(async function(){try{if(!window.claude)return;var u=await claude.use("user"),d=await claude.use("db");if(!u||!d)return;var id=await u.id();if(!id)return;_db=d.collection("data/users/"+id).doc("state");var sn=await _db.get();if(sn.exists){var rm=JSON.parse(sn.data().json);if((rm.ts||0)>(S.ts||0)){var R=S.rates;S=rm;S.rates=S.rates||{};for(var k in R)if(!S.rates[k])S.rates[k]=R[k];S.paper=Object.assign({usd:0,pack:0,rate:1700,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"},S.paper||{});S.form=S.form||{};try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}restoreForm();buildProcs();document.querySelectorAll("input").forEach(fmtEl);calc();jobs();return}}remoteSave()}catch(e){}})();
 </script>
 </body>
 </html>
