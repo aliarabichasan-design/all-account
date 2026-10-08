@@ -58,6 +58,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <label>اسم الشغلة<input id="jn" placeholder="مثلاً: علب عطور"></label>
 <label>الزبون<input id="jc"></label>
 </div>
+<div style="display:flex;gap:6px;align-items:end;margin-bottom:8px"><label style="flex:1;margin:0">رقم هاتف الزبون<input id="jp" type="text" inputmode="tel"></label><button class="s" type="button" data-paste="jp" style="height:46px">لصق</button><button class="s" type="button" data-copyid="jp" style="height:46px">نسخ</button></div>
+<label>المحافظة<select id="jg"><option value="">اختر المحافظة</option><option>بغداد</option><option>البصرة</option><option>نينوى</option><option>أربيل</option><option>السليمانية</option><option>دهوك</option><option>كركوك</option><option>الأنبار</option><option>ديالى</option><option>صلاح الدين</option><option>بابل</option><option>كربلاء</option><option>النجف</option><option>القادسية</option><option>واسط</option><option>ميسان</option><option>ذي قار</option><option>المثنى</option><option>حلبجة</option></select></label>
+<div style="display:flex;gap:6px;align-items:end;margin-bottom:8px"><label style="flex:1;margin:0">العنوان<input id="jad" type="text"></label><button class="s" type="button" data-paste="jad" style="height:46px">لصق</button><button class="s" type="button" data-copyid="jad" style="height:46px">نسخ</button></div>
 <div class="row">
 <label>عدد القطع المطلوبة<input id="qty" type="text" min="1" value="1000" inputmode="numeric"></label>
 <label>كم قطعة تطلع من الورقة<input id="per" type="text" min="1" value="4" inputmode="numeric"></label>
@@ -132,14 +135,14 @@ return '<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>الو
 '<div id="pb_weight" style="'+g+'">'+f("عرض الورقة (سم)","w")+f("طول الورقة (سم)","l")+f("سعر الطن بالدولار ($)","tp")+'</div>'+
 '<div id="c_paper2" style="font-weight:600;font-size:15px;color:var(--main);margin-top:4px;white-space:pre-line"></div><div id="c_paper" style="font-weight:600;font-size:13px;color:var(--mute)"></div></div>'}
 function lamBox(r){function lf(l,k){return '<label style="margin:0">'+l+'<input type="text" inputmode="decimal" data-k="lam" data-f="'+k+'" value="'+(r[k]||"")+'"></label>'}
-return '<div class="pr" style="grid-template-columns:auto 1fr"><input type="checkbox" data-k="lam" data-f="on"'+(r.on?' checked':'')+' aria-label="السلفان"><span>السلفان</span><div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px">'+lf("عرض الورقة (سم)","wid")+lf("طول الورقة (سم)","len")+lf("السعر","price")+'</div><label style="grid-column:1/-1;margin:0">السلفان<select data-k="lam" data-f="sides"><option value="1"'+(isTwo(r)?'':' selected')+'>وجه واحد</option><option value="2"'+(isTwo(r)?' selected':'')+'>وجهين (السعر × 2)</option></select></label><div class="c" id="c_lam"></div></div>'}
+return '<div class="pr" style="grid-template-columns:auto 1fr"><input type="checkbox" data-k="lam" data-f="on"'+(r.on?' checked':'')+' aria-label="السلفان"><span>السلفان</span><div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px">'+lf("عرض الورقة (سم)","wid")+lf("طول الورقة (سم)","len")+lf("السعر","price")+lf("مبلغ ثابت إضافي","fix")+'</div><label style="grid-column:1/-1;margin:0">السلفان<select data-k="lam" data-f="sides"><option value="1"'+(isTwo(r)?'':' selected')+'>وجه واحد</option><option value="2"'+(isTwo(r)?' selected':'')+'>وجهين (السعر × 2)</option></select></label><div class="c" id="c_lam"></div></div>'}
 function plateBox(r){return '<div class="pr" style="grid-template-columns:auto 1fr 140px"><input type="checkbox" data-k="plate" data-f="on"'+(r.on?' checked':'')+' aria-label="البليت"><span>البليت</span><input type="text" inputmode="decimal" placeholder="السعر" data-k="plate" data-f="price" value="'+(r.price||"")+'"><div class="c" id="c_plate"></div></div>'}
 function buildProcs(){
  $("procs").innerHTML=ALL.map(function(p){var r=S.rates[p[0]],id=p[0];if(id==="paper")return paperBox();if(id==="lam")return lamBox(r);if(id==="plate")return plateBox(r);
   return '<div class="pr gr"><input type="checkbox" data-k="'+id+'" data-f="on"'+(r.on?' checked':'')+' aria-label="'+p[1]+'"><span>'+p[1]+'</span>'+
   '<input type="text" min="0" inputmode="decimal" value="'+(r.price||"")+'" placeholder="السعر" data-k="'+id+'" data-f="price">'+
   (id==="paper"?'<span style="font-size:13px;color:var(--mute)">لكل ورقة</span>':'<select data-k="'+id+'" data-f="basis">'+Object.keys(BASIS).map(function(b){return '<option value="'+b+'"'+(r.basis===b?' selected':'')+'>'+BASIS[b]+'</option>'}).join("")+'</select>')+
-  '<div class="c" id="c_'+id+'"></div>'+'</div>'}).join("");
+  (id==="print"?'<input type="text" inputmode="decimal" placeholder="مبلغ ثابت إضافي (اختياري)" data-k="print" data-f="fix" value="'+(r.fix||"")+'" style="grid-column:1/-1">':"")+'<div class="c" id="c_'+id+'"></div>'+'</div>'}).join("");
 }
 function calc(){
  var q=num($("qty").value),per=Math.max(1,num($("per").value)||1);
@@ -154,13 +157,14 @@ msg=c?"("+d2(P.w)+" × "+d2(P.l)+" × "+d2(P.gsm)+" × "+d2(P.tp)+") ÷ 10,000,0
 else{var u2=P.pack?P.usd/P.pack*P.rate:0;c=sheets*u2;
 msg=c?"سعر الورقة = ("+d2(P.usd)+" ÷ "+d2(P.pack)+") × "+d2(P.rate)+" = "+n(u2)+" د.ع · "+n(sheets)+" ورقة = "+n(c):(P.usd&&!P.rate?"اكتب سعر الدولار حتى يحسب سعر الورق":(P.usd&&!P.pack?"اكتب عدد الأوراق بالبند":""))}
 $("c_paper").textContent=msg;if(P.gsm)det.push({k:"gsm",t:"وزن الكارتون: "+d2(P.gsm)+" غم"});var pt=[];if(P.pack&&sheets)pt.push("عدد البنود المطلوبة: "+d2(sheets/P.pack)+" بند ("+n(sheets)+" ÷ "+d2(P.pack)+")");if(P.mode==="weight"&&P.pack&&c)pt.push("سعر البند الواحد ("+d2(P.pack)+" ورقة): "+n(u*P.pack)+" د.ع ($"+d2(usd*P.pack)+")");$("c_paper2").textContent=pt.join("\n")}else if(r.on){var pm=(p[0]==="print"&&half)?2:1,m=r.basis==="bundle5"?(S.paper.pack?Math.ceil(Math.round((p[0]==="print"?psheets:sheets)/S.paper.pack/5*1e6)/1e6):0):r.basis==="bundle"?(S.paper.pack?(p[0]==="print"?psheets:sheets)/S.paper.pack:0):r.basis==="k1000"?Math.ceil((p[0]==="print"?psheets:sheets)/1000):r.basis==="sheet"?(p[0]==="print"?psheets:sheets):r.basis==="piece"?q:1;c=p[0]==="plate"?(+r.price||0):p[0]==="lam"?(r.wid||0)*(r.len||0)*(+r.price||0)*sheets*(isTwo(r)?2:1)/1000:(+r.price||0)*pm*m}
-  if(p[0]!=="paper")$("c_"+p[0]).textContent=r.on&&c?"= "+n(c)+(p[0]==="lam"?" ("+(r.wid||0)+" × "+(r.len||0)+" × "+(r.price||0)+" × "+n(sheets)+" ورقة"+(isTwo(r)?" × 2 وجهين":"")+" ÷ 1,000)":"")+(p[0]==="print"&&r.basis==="bundle5"&&S.paper.pack?" ("+(Math.round(psheets/S.paper.pack*100)/100)+" بند ÷ 5 = "+Math.ceil(Math.round(psheets/S.paper.pack/5*1e6)/1e6)+" وحدة)":"")+(p[0]==="print"&&r.basis==="bundle"&&S.paper.pack?" ("+(Math.round(psheets/S.paper.pack*100)/100)+" بند)":"")+(p[0]==="print"&&r.basis==="k1000"?" ("+(S.paper.pack?(Math.round(psheets/S.paper.pack*100)/100)+" بند = ":"")+n(psheets)+" وزقة = "+n(Math.ceil(psheets/1000))+" وحدة)":"")+(p[0]==="print"&&half?" (نص بطال: "+n(psheets)+" ورقة، السعر × 2)":""):"";
+  if(r.on&&(p[0]==="print"||p[0]==="lam"))c+=(+r.fix||0);
+  if(p[0]!=="paper")$("c_"+p[0]).textContent=r.on&&c?"= "+n(c)+((p[0]==="print"||p[0]==="lam")&&+r.fix?" (يشمل ثابت "+nf(+r.fix)+")":"")+(p[0]==="lam"?" ("+(r.wid||0)+" × "+(r.len||0)+" × "+(r.price||0)+" × "+n(sheets)+" ورقة"+(isTwo(r)?" × 2 وجهين":"")+" ÷ 1,000)":"")+(p[0]==="print"&&r.basis==="bundle5"&&S.paper.pack?" ("+(Math.round(psheets/S.paper.pack*100)/100)+" بند ÷ 5 = "+Math.ceil(Math.round(psheets/S.paper.pack/5*1e6)/1e6)+" وحدة)":"")+(p[0]==="print"&&r.basis==="bundle"&&S.paper.pack?" ("+(Math.round(psheets/S.paper.pack*100)/100)+" بند)":"")+(p[0]==="print"&&r.basis==="k1000"?" ("+(S.paper.pack?(Math.round(psheets/S.paper.pack*100)/100)+" بند = ":"")+n(psheets)+" وزقة = "+n(Math.ceil(psheets/1000))+" وحدة)":"")+(p[0]==="print"&&half?" (نص بطال: "+n(psheets)+" ورقة، السعر × 2)":""):"";
   if(r.on&&(r.basis==="bundle"||r.basis==="bundle5")&&!S.paper.pack)$("c_"+p[0]).textContent="اكتب عدد الأوراق بالبند";
   if(p[0]==="lam"&&r.on&&!c)$("c_lam").textContent="اكتب العرض والطول والسعر";
   if(c){c=Math.round(c*100)/100;cost+=c;lines.push([p[1]+(p[0]==="lam"&&isTwo(r)?" (وجهين)":""),c]);if(p[0]!=="paper")det.push({k:p[0],t:p[0]==="lam"?(isTwo(r)?"سلفان وجهين":"سلفان وجه واحد"):p[1]})}});
  var mg=num($("margin").value);cost=Math.round(cost*100)/100;
  var price=Math.round((cost+mg)*100)/100;
- cur={name:$("jn").value.trim(),cust:$("jc").value.trim(),qty:q,cost:cost,price:price,det:det,sheets:sheets,gsm:S.paper.gsm||0};
+ cur={name:$("jn").value.trim(),cust:$("jc").value.trim(),phone:$("jp").value.trim(),gov:$("jg").value,addr:$("jad").value.trim(),qty:q,cost:cost,price:price,det:det,sheets:sheets,gsm:S.paper.gsm||0};
  $("res").innerHTML=lines.map(function(l){return '<div><span>'+l[0]+'</span><span>'+nf(l[1])+'</span></div>'}).join("")+
  '<div style="border-top:1px solid var(--line);margin-top:4px;padding-top:6px"><span>التكلفة الكلية</span><b>'+nf(cost)+'</b></div>'+
  '<div><span>الربح</span><span class="ok">'+nf(price-cost)+'</span></div>'+
@@ -169,19 +173,20 @@ $("c_paper").textContent=msg;if(P.gsm)det.push({k:"gsm",t:"وزن الكارتو
 }
 document.addEventListener("input",function(e){var t=e.target;
  if(t.dataset&&t.dataset.p){S.paper[t.dataset.p]=(t.dataset.p==="mode"||t.dataset.p==="unit")?t.value:num(t.value);save()}
- if(t.dataset&&t.dataset.k){var r=S.rates[t.dataset.k];r[t.dataset.f]=t.type==="checkbox"?t.checked:/^(price|wid|len|cnt)$/.test(t.dataset.f)?num(t.value):t.value;save()}
- if(t.id&&/^(jn|jc|qty|per|margin|adv)$/.test(t.id)){S.form[t.id]=t.value;save()}
+ if(t.dataset&&t.dataset.k){var r=S.rates[t.dataset.k];r[t.dataset.f]=t.type==="checkbox"?t.checked:/^(price|wid|len|cnt|fix)$/.test(t.dataset.f)?num(t.value):t.value;save()}
+ if(t.id&&/^(jn|jc|jp|jg|jad|qty|per|margin|adv)$/.test(t.id)){S.form[t.id]=t.value;save()}
  if(t.closest("#calc"))calc()});
 document.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var d=b.dataset;
+ if(d.paste)pasteTo(d.paste);if(d.copyid&&$(d.copyid).value)copyText($(d.copyid).value,b);if(d.copy)copyText(decodeURIComponent(d.copy),b);
  if(d.cinv)showInvMulti(decodeURIComponent(d.cinv));
- if(d.inv){var jj=S.jobs.find(function(x){return x.id===d.inv});if(jj)showInv({name:jj.name,cust:jj.cust,qty:jj.qty,sheets:jj.sheets,det:jj.det||(jj.items||[]).map(function(t){return{k:t,t:t}}),gsm:jj.gsm,price:jj.price,paid:jj.paid,date:jj.date,id:jj.id})}
+ if(d.inv){var jj=S.jobs.find(function(x){return x.id===d.inv});if(jj)showInv({phone:jj.phone,gov:jj.gov,addr:jj.addr,name:jj.name,cust:jj.cust,qty:jj.qty,sheets:jj.sheets,det:jj.det||(jj.items||[]).map(function(t){return{k:t,t:t}}),gsm:jj.gsm,price:jj.price,paid:jj.paid,date:jj.date,id:jj.id})}
  if(d.t){document.querySelectorAll("nav button,section").forEach(function(x){x.classList.remove("on")});b.classList.add("on");$(d.t).classList.add("on");if(d.t==="jobs")jobs()}
  if(d.pay){var j=S.jobs.find(function(x){return x.id===d.pay}),rem=j.price-j.paid,a=+prompt("مبلغ التسديد (المتبقي "+n(rem)+")",rem);if(a>0){j.paid+=Math.min(a,rem);save();jobs()}}
  if(d.del&&confirm("تحذف هذه الشغلة؟")){S.jobs=S.jobs.filter(function(x){return x.id!==d.del});save();jobs()}});
 $("save").onclick=function(){
  if(!cur.price){alert("فعّل عملية واحدة على الأقل واكتب سعرها");return}
  var adv=Math.min(num($("adv").value),cur.price);
- S.jobs.unshift({id:Date.now().toString(36),date:new Date().toISOString().slice(0,10),name:cur.name||"شغلة بدون اسم",cust:cur.cust,qty:cur.qty,cost:cur.cost,price:cur.price,paid:adv,det:cur.det,sheets:cur.sheets,gsm:cur.gsm});
+ S.jobs.unshift({id:Date.now().toString(36),date:new Date().toISOString().slice(0,10),name:cur.name||"شغلة بدون اسم",cust:cur.cust,qty:cur.qty,cost:cur.cost,price:cur.price,paid:adv,det:cur.det,sheets:cur.sheets,gsm:cur.gsm,phone:cur.phone,gov:cur.gov,addr:cur.addr});
  save();$("jn").value="";$("adv").value=0;S.form.jn="";S.form.adv="0";save();
  document.querySelector('nav [data-t="jobs"]').click();
 };
@@ -190,7 +195,7 @@ function jobs(){
  $("t1").textContent=nf(t);$("t2").textContent=nf(rem);
  var gs={},ord=[];S.jobs.forEach(function(j){var k=j.cust||"";if(!gs[k]){gs[k]=[];ord.push(k)}gs[k].push(j)});
  $("jl").innerHTML=S.jobs.length?ord.map(function(k){var g=gs[k],gt=0,gr=0;g.forEach(function(j){gt+=j.price;gr+=j.price-j.paid});
-  return '<div style="margin-bottom:12px"><div class="it" style="border-bottom:2px solid var(--gold)"><div><b>'+esc(k||"بدون زبون")+'</b><small>'+g.length+' عمل · المجموع '+nf(gt)+' · المتبقي '+nf(gr)+'</small></div>'+(k?'<button class="s" data-cinv="'+encodeURIComponent(k)+'">فاتورة الزبون</button>':'')+'</div>'+g.map(jobRow).join("")+'</div>'}).join(""):'<div class="empty">ما أكو شغلات محفوظة. احسب شغلة واضغط "احفظ الشغلة".</div>';
+  return '<div style="margin-bottom:12px"><div class="it" style="border-bottom:2px solid var(--gold)"><div><b>'+esc(k||"بدون زبون")+'</b><small>'+g.length+' عمل · المجموع '+nf(gt)+' · المتبقي '+nf(gr)+'</small>'+(function(){var q=g.filter(function(j){return j.phone||j.gov||j.addr})[0]||{},a=[q.gov,q.addr].filter(Boolean).join(" - ");return (q.phone?'<small>'+esc(q.phone)+' <button class="s" data-copy="'+encodeURIComponent(q.phone)+'">نسخ الهاتف</button></small>':'')+(a?'<small>'+esc(a)+' <button class="s" data-copy="'+encodeURIComponent(a)+'">نسخ العنوان</button></small>':'')})()+'</div>'+(k?'<button class="s" data-cinv="'+encodeURIComponent(k)+'">فاتورة الزبون</button>':'')+'</div>'+g.map(jobRow).join("")+'</div>'}).join(""):'<div class="empty">ما أكو شغلات محفوظة. احسب شغلة واضغط "احفظ الشغلة".</div>';
 }
 function jobRow(j){var m=j.price-j.paid;
  return '<div class="it"><div><b>'+esc(j.name)+'</b><small>'+nf(j.qty)+' قطعة · '+j.date+'</small><small>السعر '+nf(j.price)+' · الربح '+nf(j.price-j.cost)+'</small></div><div style="text-align:left"><div class="'+(m>0?'bad':'ok')+'">'+(m>0?'متبقي '+nf(m):'مسددة')+'</div>'+(m>0?'<button class="s" data-pay="'+j.id+'">تسديد</button> ':'')+'<button class="s" data-inv="'+j.id+'">فاتورة</button> <button class="s" data-del="'+j.id+'">حذف</button></div></div>'
@@ -204,12 +209,12 @@ $("reset").onclick=function(){
  if(!confirm("تصفّر كل المدخلات والأسعار؟ الشغلات المحفوظة ما تنحذف."))return;
  var r={};PROCS.forEach(function(p){r[p[0]]={on:!!p[4],price:p[3],basis:p[2]}});r.extra={on:false,price:0,basis:"fixed"};
  S.rates=r;S.paper={usd:0,pack:0,rate:1700,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"};
- var d={jn:"",jc:"",qty:"",per:"",margin:"0",adv:"0"};S.form=d;for(var k in d)$(k).value=d[k];
+ var d={jn:"",jc:"",jp:"",jg:"",jad:"",qty:"",per:"",margin:"0",adv:"0"};S.form=d;for(var k in d)$(k).value=d[k];
  save();buildProcs();document.querySelectorAll("input").forEach(fmtEl);calc();
 };
 function renderMulti(){var o=INV,rem=o.price-o.paid;
  $("invbody").innerHTML=(S.logo?'<img src="'+S.logo+'" alt="BAN" style="display:block;max-height:80px;max-width:60%;margin:0 auto 8px">':"")+'<h2 id="offname" contenteditable="true" style="margin:0 0 2px;text-align:center">'+esc(S.office||"BAN")+'</h2><div style="text-align:center;font-size:22px;font-weight:600;margin-bottom:12px">فاتورة</div>'+
- '<div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px"><span>التاريخ: '+o.date+'</span></div>'+irow("الزبون",o.cust)+
+ '<div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px"><span>التاريخ: '+o.date+'</span></div>'+irow("الزبون",o.cust)+(function(){var q=o.jobs.filter(function(j){return j.phone||j.gov||j.addr})[0]||{};return (q.phone?irow("الهاتف",q.phone):"")+(q.gov?irow("المحافظة",q.gov):"")+(q.addr?irow("العنوان",q.addr):"")})()+
  o.jobs.map(function(j){var d=jdet(j);return '<div style="padding:8px 0;border-bottom:1px solid #ddd"><div style="display:flex;justify-content:space-between"><b>'+esc(j.name||"—")+'</b><b>'+nf(j.price)+' د.ع</b></div><div style="font-size:14px;color:#444">الكمية: '+nf(j.qty)+' قطعة'+(j.qty>0?' · سعر الوحدة: '+nf(j.price/j.qty)+' د.ع':'')+(d?'<br>'+esc(d):'')+'</div></div>'}).join("")+
  '<div style="border-top:2px solid #111;margin-top:14px;padding-top:10px;display:flex;justify-content:space-between;font-size:20px;font-weight:700"><span>المجموع النهائي</span><span>'+nf(o.price)+' د.ع</span></div>'+
  (o.paid>0?irow("الدفعة",nf(o.paid)+" د.ع")+irow("المتبقي",rem>0?nf(rem)+" د.ع":"مسدد"):"")}
@@ -227,6 +232,13 @@ function showInv(o){INV=o;var dt=o.det||[],lm=dt.filter(function(x){return x.k==
  '<label style="'+cb+'"><input type="checkbox" id="invfoil" style="width:22px;height:22px"> التذهيب (فويل)</label>';
  $("invlam").value=INV.lam;$("invfoil").checked=INV.foil;$("invg").checked=!(S.invsel&&S.invsel.gsm===false);
  renderInv();$("inv").hidden=false;$("inv").scrollTop=0}
+function cleanPhone(t){return fixD(t).replace(/[^\d+]/g,"").replace(/^(\+|00)964/,"0")}
+function setPasted(el,t){el.value=el.id==="jp"?cleanPhone(t):fixD(t).trim();el.dispatchEvent(new Event("input",{bubbles:true}))}
+function pasteTo(id){var el=$(id),msg="الصق يدوياً: اضغط مطولاً بالخانة واختر لصق";if(navigator.clipboard&&navigator.clipboard.readText){navigator.clipboard.readText().then(function(t){setPasted(el,t)}).catch(function(){alert(msg)})}else alert(msg)}
+function copyText(t,b){var o=b.textContent;function done(){b.textContent="تم النسخ";setTimeout(function(){b.textContent=o},1200)}
+ function fb(){var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");done()}catch(e){alert(t)}document.body.removeChild(ta)}
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done).catch(fb)}else fb()}
+$("jp").addEventListener("paste",function(e){var t=(e.clipboardData||window.clipboardData).getData("text");e.preventDefault();setPasted(this,t)});
 function jdet(j){var a=[];if(j.gsm>0)a.push("وزن الكارتون: "+nf(j.gsm)+" غم");(j.det||[]).forEach(function(x){if(x.k==="lam")a.push(/وجهين/.test(x.t)?"سلفان وجهين":"سلفان وجه واحد");if(x.k==="foil")a.push("التذهيب (فويل)")});return a.join(" · ")}
 function showInvMulti(c){var js=S.jobs.filter(function(j){return (j.cust||"")===c}),p=0,pd=0;js.forEach(function(j){p+=j.price;pd+=j.paid});
  INV={multi:true,cust:c,jobs:js,price:p,paid:pd,date:new Date().toISOString().slice(0,10),id:"—"};
@@ -237,7 +249,7 @@ function renderInv(){var o=INV;if(o.multi){renderMulti();return}var rem=o.price-
  if(o.lam==="1")it.push("سلفان وجه واحد");if(o.lam==="2")it.push("سلفان وجهين");if(o.foil)it.push("التذهيب (فويل)");
  $("invbody").innerHTML=(S.logo?'<img src="'+S.logo+'" alt="BAN" style="display:block;max-height:80px;max-width:60%;margin:0 auto 8px">':"")+'<h2 id="offname" contenteditable="true" style="margin:0 0 2px;text-align:center">'+esc(S.office||"BAN")+'</h2><div style="text-align:center;font-size:22px;font-weight:600;margin-bottom:12px">فاتورة</div>'+
  '<div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px"><span>التاريخ: '+o.date+'</span><span>رقم: '+esc(o.id)+'</span></div>'+
- irow("الزبون",o.cust||"—")+irow("الشغلة",o.name||"—")+irow("الكمية",nf(o.qty)+" قطعة")+(o.qty>0?irow("سعر الوحدة الواحدة",nf(o.price/o.qty)+" د.ع"):"")+
+ irow("الزبون",o.cust||"—")+(o.phone?irow("الهاتف",o.phone):"")+(o.gov?irow("المحافظة",o.gov):"")+(o.addr?irow("العنوان",o.addr):"")+irow("الشغلة",o.name||"—")+irow("الكمية",nf(o.qty)+" قطعة")+(o.qty>0?irow("سعر الوحدة الواحدة",nf(o.price/o.qty)+" د.ع"):"")+
  (it.length?'<div style="margin:12px 0 4px;font-weight:600">التفاصيل</div><ul style="margin:0;padding-right:20px">'+it.map(function(i){return '<li>'+esc(i)+'</li>'}).join("")+'</ul>':"")+
  '<div style="border-top:2px solid #111;margin-top:14px;padding-top:10px;display:flex;justify-content:space-between;font-size:20px;font-weight:700"><span>السعر النهائي</span><span>'+nf(o.price)+' د.ع</span></div>'+
  (o.paid>0?irow("الدفعة",nf(o.paid)+" د.ع")+irow("المتبقي",rem>0?nf(rem)+" د.ع":"مسدد"):"")}
@@ -245,7 +257,7 @@ $("invsel").oninput=function(e){if(e.target.id==="invgsm"){INV.gsm=num(e.target.
 $("invsel").onchange=function(e){var t=e.target;if(t.id==="invlam")INV.lam=t.value;else if(t.id==="invfoil")INV.foil=t.checked;else if(t.id==="invlogo"){loadLogo(t.files[0]);return}else if(t.id==="invg"){S.invsel=S.invsel||{};S.invsel.gsm=t.checked;save()}else return;renderInv()};
 $("invbody").addEventListener("focusout",function(e){if(e.target.id==="offname"){S.office=e.target.textContent.trim();save()}});
 $("invbtn").onclick=function(){if(!cur.price){alert("فعّل عملية واحدة على الأقل واكتب سعرها");return}
- showInv({name:cur.name,cust:cur.cust,qty:cur.qty,sheets:cur.sheets,det:cur.det,gsm:cur.gsm,price:cur.price,paid:Math.min(num($("adv").value),cur.price),date:new Date().toISOString().slice(0,10),id:"—"})};
+ showInv({phone:cur.phone,gov:cur.gov,addr:cur.addr,name:cur.name,cust:cur.cust,qty:cur.qty,sheets:cur.sheets,det:cur.det,gsm:cur.gsm,price:cur.price,paid:Math.min(num($("adv").value),cur.price),date:new Date().toISOString().slice(0,10),id:"—"})};
 $("invclose").onclick=function(){$("inv").hidden=true};
 $("invprint").onclick=function(){try{window.print()}catch(e){alert("الطباعة غير متاحة هنا. صوّر الشاشة أو افتح الصفحة من المتصفح واطبع منه.")}};
 var _db=null,_t=null;
