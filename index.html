@@ -52,7 +52,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <body>
 <main>
 <h1>حساب المطبوعات</h1>
-<nav id="nav"><button data-t="calc" class="on">حاسبة الشغلة</button><button data-t="jobs">الشغلات</button></nav>
+<nav id="nav"><button data-t="calc" class="on">حاسبة الشغلة</button><button data-t="jobs">الشغلات</button><button data-t="sup">المجهزين</button></nav>
 
 <section id="calc" class="on">
 <div class="box">
@@ -85,6 +85,25 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <button class="s" id="invbtn" style="width:100%;padding:12px;margin-top:10px">فاتورة للزبون (بدون أسعار التفاصيل)</button>
 </div>
 <button class="s" id="reset" style="width:100%;padding:12px">تصفير كل المدخلات</button>
+</section>
+
+<section id="sup">
+<div class="box">
+<div style="font-weight:600;margin-bottom:8px">إضافة مجهز</div>
+<label>اسم المجهز<input id="supn"></label>
+<button class="p" id="supadd">أضف المجهز</button>
+</div>
+<div class="box">
+<div style="font-weight:600;margin-bottom:8px">تسجيل دين أو تسديد</div>
+<label>المجهز<select id="supsel"></select></label>
+<div class="row"><label>النوع<select id="suptype"><option value="debt">دين جديد (علينا)</option><option value="pay">تسديد (دفعنا)</option></select></label>
+<label>العملة<select id="supcur"><option value="IQD">دينار</option><option value="USD">دولار</option></select></label></div>
+<label>نوع الخدمة<select id="supwork"><option>كارتون</option><option>قالب</option><option>بليت</option><option>سلفان</option><option>قص</option><option>لزك</option><option>يونس</option><option>طبع</option></select></label>
+<div class="row"><label>المبلغ<input id="supamt" type="text" inputmode="decimal"></label><label>اسم الشغلة<input id="supnote"></label></div>
+<button class="p" id="supmv">سجّل</button>
+</div>
+<div class="sum" id="suptot"></div>
+<div id="supl"></div>
 </section>
 
 <section id="jobs">
@@ -179,10 +198,13 @@ document.addEventListener("input",function(e){var t=e.target;
  if(t.id&&/^(jn|jc|jp|jg|jad|qty|per|margin|adv)$/.test(t.id)){S.form[t.id]=t.value;save()}
  if(t.closest("#calc"))calc()});
 document.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var d=b.dataset;
+ if(d.sdel&&confirm("تحذف هذا المجهز وكل حركاته؟")){S.sup=sups().filter(function(x){return x.id!==d.sdel});save();supRender()}
+ if(d.stx){var pr=d.stx.split("|"),su=sups().filter(function(x){return x.id===pr[0]})[0];if(su&&confirm("تحذف هذي الحركة؟")){su.tx=su.tx.filter(function(t){return t.id!==pr[1]});save();supRender()}}
+ if(d.sopen){SUPOPEN[d.sopen]=!SUPOPEN[d.sopen];supRender()}
  if(d.paste)pasteTo(d.paste);if(d.copyid&&$(d.copyid).value)copyText($(d.copyid).value,b);if(d.copy)copyText(decodeURIComponent(d.copy),b);
  if(d.cinv)showInvMulti(decodeURIComponent(d.cinv));
  if(d.inv){var jj=S.jobs.find(function(x){return x.id===d.inv});if(jj)showInv({phone:jj.phone,gov:jj.gov,addr:jj.addr,name:jj.name,cust:jj.cust,qty:jj.qty,sheets:jj.sheets,det:jj.det||(jj.items||[]).map(function(t){return{k:t,t:t}}),gsm:jj.gsm,price:jj.price,paid:jj.paid,date:jj.date,id:jj.id})}
- if(d.t){document.querySelectorAll("nav button,section").forEach(function(x){x.classList.remove("on")});b.classList.add("on");$(d.t).classList.add("on");if(d.t==="jobs")jobs()}
+ if(d.t){document.querySelectorAll("nav button,section").forEach(function(x){x.classList.remove("on")});b.classList.add("on");$(d.t).classList.add("on");if(d.t==="jobs")jobs();if(d.t==="sup")supRender()}
  if(d.pay){var j=S.jobs.find(function(x){return x.id===d.pay}),rem=j.price-j.paid,a=+prompt("مبلغ التسديد (المتبقي "+n(rem)+")",rem);if(a>0){j.paid+=Math.min(a,rem);save();jobs()}}
  if(d.del&&confirm("تحذف هذه الشغلة؟")){S.jobs=S.jobs.filter(function(x){return x.id!==d.del});save();jobs()}});
 $("save").onclick=function(){
@@ -265,6 +287,26 @@ $("invbtn").onclick=function(){if(!cur.price){alert("فعّل عملية واح�
  showInv({phone:cur.phone,gov:cur.gov,addr:cur.addr,name:cur.name,cust:cur.cust,qty:cur.qty,sheets:cur.sheets,det:cur.det,gsm:cur.gsm,price:cur.price,paid:Math.min(num($("adv").value),cur.price),date:new Date().toISOString().slice(0,10),id:"—"})};
 $("invclose").onclick=function(){$("inv").hidden=true};
 $("invprint").onclick=function(){try{window.print()}catch(e){alert("الطباعة غير متاحة هنا. صوّر الشاشة أو افتح الصفحة من المتصفح واطبع منه.")}};
+var SUPOPEN={};
+function sups(){S.sup=S.sup||[];return S.sup}
+function sbal(su){var b={IQD:0,USD:0};su.tx.forEach(function(t){b[t.cur]+=t.type==="debt"?t.amt:-t.amt});return b}
+function fbal(b){var a=[];if(b.IQD)a.push(nf(b.IQD)+" د.ع");if(b.USD)a.push("$"+nf(b.USD));return a.join(" + ")||"0"}
+function supRender(){var L=sups(),tot={IQD:0,USD:0},cv=$("supsel").value;
+ L.forEach(function(x){var b=sbal(x);tot.IQD+=b.IQD;tot.USD+=b.USD});
+ $("supsel").innerHTML=L.length?L.map(function(x){return '<option value="'+x.id+'">'+esc(x.name)+'</option>'}).join(""):'<option value="">أضف مجهز أولاً</option>';
+ if(cv)$("supsel").value=cv;
+ $("suptot").innerHTML='<div><small>المستحق للمجهزين (دينار)</small><b class="bad">'+nf(tot.IQD)+'</b></div><div><small>المستحق للمجهزين (دولار)</small><b class="bad">$'+nf(tot.USD)+'</b></div>';
+ $("supl").innerHTML=L.length?L.map(function(x){var b=sbal(x),txs=x.tx.slice().reverse(),open=SUPOPEN[x.id],shown=open?txs:txs.slice(0,4),owe=b.IQD>0||b.USD>0;
+  return '<div class="box"><div class="it" style="border-bottom:2px solid var(--gold);padding-top:0"><div><b style="color:var(--bad);font-size:19px">'+esc(x.name)+'</b>'+'</div><div style="text-align:left"><small>المتبقي علينا</small><b class="'+(owe?'bad':'ok')+'" style="font-size:17px">'+(owe?fbal(b):'مسدد')+'</b></div></div>'+
+  (shown.length?shown.map(function(t){return '<div class="it"><div><b class="'+(t.type==="debt"?'bad':'ok')+'">'+(t.type==="debt"?'دين':'تسديد')+'</b><small>'+t.date+(t.work?' · '+esc(t.work):'')+(t.note?' · '+esc(t.note):'')+'</small></div><div>'+(t.cur==="USD"?'$':'')+nf(t.amt)+(t.cur==="IQD"?' د.ع':'')+' <button class="s" data-stx="'+x.id+'|'+t.id+'">حذف</button></div></div>'}).join(""):'<div class="empty">ما أكو حركات.</div>')+
+  '<div style="display:flex;gap:6px;margin-top:8px">'+(txs.length>4?'<button class="s" data-sopen="'+x.id+'">'+(open?'إخفاء':'كل الحركات ('+txs.length+')')+'</button>':'')+'<button class="s" data-sdel="'+x.id+'">حذف المجهز</button></div></div>'}).join(""):'<div class="empty">ما أكو مجهزين. أضف أول مجهز من الأعلى.</div>'}
+function suid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+$("supadd").onclick=function(){var n=$("supn").value.trim();if(!n){alert("اكتب اسم المجهز");return}
+ sups().push({id:suid(),name:n,tx:[]});$("supn").value="";save();supRender()};
+$("supmv").onclick=function(){var id=$("supsel").value,a=num($("supamt").value),su=sups().filter(function(x){return x.id===id})[0];
+ if(!su){alert("اختر مجهز");return}if(!(a>0)){alert("اكتب مبلغ صحيح");return}
+ su.tx.push({id:suid(),date:new Date().toISOString().slice(0,10),type:$("suptype").value,amt:a,cur:$("supcur").value,work:$("supwork").value,note:$("supnote").value.trim()});
+ $("supamt").value=$("supnote").value="";save();supRender()};
 var _db=null,_t=null;
 function remoteSave(){if(!_db)return;clearTimeout(_t);_t=setTimeout(function(){_db.set({json:JSON.stringify(S),ts:S.ts||Date.now()}).catch(function(){})},800)}
 (async function(){try{if(!window.claude)return;var u=await claude.use("user"),d=await claude.use("db");if(!u||!d)return;var id=await u.id();if(!id)return;_db=d.collection("data/users/"+id).doc("state");var sn=await _db.get();if(sn.exists){var rm=JSON.parse(sn.data().json);if((rm.ts||0)>(S.ts||0)){var R=S.rates;S=rm;S.rates=S.rates||{};for(var k in R)if(!S.rates[k])S.rates[k]=R[k];S.paper=Object.assign({usd:0,pack:0,rate:1700,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"},S.paper||{});S.form=S.form||{};try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}restoreForm();buildProcs();document.querySelectorAll("input").forEach(fmtEl);calc();jobs();return}}remoteSave()}catch(e){}})();
