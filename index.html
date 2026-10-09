@@ -52,6 +52,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <body>
 <main>
 <h1>حساب المطبوعات</h1>
+<div id="savestat" style="font-size:12px;color:var(--mute);margin:-8px 0 10px"></div>
 <nav id="nav"><button data-t="calc" class="on">حاسبة الشغلة</button><button data-t="jobs">الشغلات</button><button data-t="sup">المجهزين</button></nav>
 
 <section id="calc" class="on">
@@ -307,9 +308,10 @@ $("supmv").onclick=function(){var id=$("supsel").value,a=num($("supamt").value),
  if(!su){alert("اختر مجهز");return}if(!(a>0)){alert("اكتب مبلغ صحيح");return}
  su.tx.push({id:suid(),date:new Date().toISOString().slice(0,10),type:$("suptype").value,amt:a,cur:$("supcur").value,work:$("supwork").value,note:$("supnote").value.trim()});
  $("supamt").value=$("supnote").value="";save();supRender()};
+function setStat(ok){$("savestat").textContent=ok?"✓ محفوظ بحسابك (تفتحه من أي جهاز)":"محفوظ على هذا الجهاز فقط — خذ نسخة احتياطية بين فترة وفترة"}
 var _db=null,_t=null;
-function remoteSave(){if(!_db)return;clearTimeout(_t);_t=setTimeout(function(){_db.set({json:JSON.stringify(S),ts:S.ts||Date.now()}).catch(function(){})},800)}
-(async function(){try{if(!window.claude)return;var u=await claude.use("user"),d=await claude.use("db");if(!u||!d)return;var id=await u.id();if(!id)return;_db=d.collection("data/users/"+id).doc("state");var sn=await _db.get();if(sn.exists){var rm=JSON.parse(sn.data().json);if((rm.ts||0)>(S.ts||0)){var R=S.rates;S=rm;S.rates=S.rates||{};for(var k in R)if(!S.rates[k])S.rates[k]=R[k];S.paper=Object.assign({usd:0,pack:0,rate:1700,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"},S.paper||{});S.form=S.form||{};try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}restoreForm();buildProcs();document.querySelectorAll("input").forEach(fmtEl);calc();jobs();return}}remoteSave()}catch(e){}})();
+function remoteSave(){if(!_db)return;clearTimeout(_t);_t=setTimeout(function(){_db.set({json:JSON.stringify(S),ts:S.ts||Date.now()}).then(function(){setStat(1)}).catch(function(){setStat(0)})},800)}
+(async function(){try{if(!window.claude){setStat(0);return}var u=await claude.use("user"),d=await claude.use("db");if(!u||!d){setStat(0);return}var id=await u.id();if(!id){setStat(0);return}_db=d.collection("data/users/"+id).doc("state");var sn=await _db.get();if(sn.exists){var rm=JSON.parse(sn.data().json);if((rm.ts||0)>(S.ts||0)){var R=S.rates;S=rm;S.rates=S.rates||{};for(var k in R)if(!S.rates[k])S.rates[k]=R[k];S.paper=Object.assign({usd:0,pack:0,rate:1700,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"},S.paper||{});S.form=S.form||{};try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}restoreForm();buildProcs();document.querySelectorAll("input").forEach(fmtEl);calc();jobs();return}}remoteSave()}catch(e){setStat(0)}})();
 </script>
 </body>
 </html>
