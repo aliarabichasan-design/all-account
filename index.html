@@ -135,7 +135,7 @@ try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);S.jobs=d.jobs||[];
 if(!S.k1){if(S.rates.print.basis==="sheet")S.rates.print.basis="k1000";S.k1=1}
 if(!S.k2){if(S.rates.print.basis==="k1000"||S.rates.print.basis==="sheet")S.rates.print.basis="bundle";S.k2=1}
 if(!S.k3){if(S.rates.print.basis==="bundle")S.rates.print.basis="bundle5";S.k3=1}
-function save(){S.ts=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(window.remoteSave)remoteSave()}
+function save(){S.ts=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(window.remoteSave)remoteSave();idbPut()}
 S.form=S.form||{};
 if(!S.k4){if(!S.paper.rate)S.paper.rate=1700;S.k4=1}
 var $=function(i){return document.getElementById(i)};
@@ -309,6 +309,13 @@ $("supmv").onclick=function(){var id=$("supsel").value,a=num($("supamt").value),
  su.tx.push({id:suid(),date:new Date().toISOString().slice(0,10),type:$("suptype").value,amt:a,cur:$("supcur").value,work:$("supwork").value,note:$("supnote").value.trim()});
  $("supamt").value=$("supnote").value="";save();supRender()};
 function setStat(ok){$("savestat").textContent=ok?"✓ محفوظ بحسابك (تفتحه من أي جهاز)":"محفوظ على هذا الجهاز فقط — خذ نسخة احتياطية بين فترة وفترة"}
+function setStat(ok){$("savestat").textContent=ok?"✓ محفوظ على جهازك وبحسابك":"✓ محفوظ على هذا الجهاز"}
+function idbOpen(cb){try{var r=indexedDB.open("ban-print",1);r.onupgradeneeded=function(){r.result.createObjectStore("kv")};r.onsuccess=function(){cb(r.result)};r.onerror=function(){cb(null)}}catch(e){cb(null)}}
+function idbPut(){idbOpen(function(db){if(!db)return;try{db.transaction("kv","readwrite").objectStore("kv").put(JSON.stringify(S),"S")}catch(e){}})}
+function applyState(rm){var R=S.rates;S=rm;S.rates=S.rates||{};for(var k in R)if(!S.rates[k])S.rates[k]=R[k];S.paper=Object.assign({usd:0,pack:0,rate:1700,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"},S.paper||{});S.form=S.form||{};try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}restoreForm();buildProcs();document.querySelectorAll("input").forEach(fmtEl);calc();jobs();supRender()}
+function idbLoad(){idbOpen(function(db){if(!db)return;try{var q=db.transaction("kv").objectStore("kv").get("S");q.onsuccess=function(){if(!q.result)return;var rm=JSON.parse(q.result);if((rm.ts||0)>(S.ts||0))applyState(rm);else idbPut()}}catch(e){}})}
+idbLoad();try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+setStat(0);
 var _db=null,_t=null;
 function remoteSave(){if(!_db)return;clearTimeout(_t);_t=setTimeout(function(){_db.set({json:JSON.stringify(S),ts:S.ts||Date.now()}).then(function(){setStat(1)}).catch(function(){setStat(0)})},800)}
 (async function(){try{if(!window.claude){setStat(0);return}var u=await claude.use("user"),d=await claude.use("db");if(!u||!d){setStat(0);return}var id=await u.id();if(!id){setStat(0);return}_db=d.collection("data/users/"+id).doc("state");var sn=await _db.get();if(sn.exists){var rm=JSON.parse(sn.data().json);if((rm.ts||0)>(S.ts||0)){var R=S.rates;S=rm;S.rates=S.rates||{};for(var k in R)if(!S.rates[k])S.rates[k]=R[k];S.paper=Object.assign({usd:0,pack:0,rate:1700,mode:"bundle",w:0,l:0,gsm:0,tp:0,unit:"ton"},S.paper||{});S.form=S.form||{};try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}restoreForm();buildProcs();document.querySelectorAll("input").forEach(fmtEl);calc();jobs();return}}remoteSave()}catch(e){setStat(0)}})();
