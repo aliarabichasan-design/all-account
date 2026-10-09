@@ -45,6 +45,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 #invbody{background:#fff;color:#111;max-width:700px;margin:0 auto;padding:22px;border-radius:8px;font-size:16px}
 #invbody h2{outline:none}
 @media print{body>*:not(#inv){display:none!important}#inv{position:static;padding:0;background:#fff;overflow:visible}.noprint{display:none!important}#invbody{max-width:none;padding:0;border-radius:0}}
+.jn{color:#1E40AF;font-size:17px;font-weight:700}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .jn{color:#8DB8FF}}:root[data-theme="dark"] .jn{color:#8DB8FF}
 .st{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.st>div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px;text-align:center;font-size:13px}.st b{font-size:15px}@media(max-width:600px){.st{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -200,7 +201,7 @@ function jobs(){
 }
 function jobRow(j){var m=j.price-j.paid,pf=j.price-j.cost;
  function st(l,v,c){return '<div><small style="display:block;color:var(--mute)">'+l+'</small><b class="'+(c||'')+'">'+nf(v)+'</b></div>'}
- return '<div class="it" style="flex-direction:column;align-items:stretch"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+esc(j.name)+'</b><small>'+nf(j.qty)+' قطعة · '+j.date+'</small></div>'+
+ return '<div class="it" style="flex-direction:column;align-items:stretch"><div style="display:flex;justify-content:space-between;gap:8px"><b class="jn">'+esc(j.name)+'</b><small>'+nf(j.qty)+' قطعة · '+j.date+'</small></div>'+
  '<div class="st">'+st("السعر",j.price)+st("العربون",j.paid,"ok")+st("المتبقي",m,m>0?"bad":"ok")+st("الربح",pf,"ok")+'</div>'+
  '<div style="display:flex;gap:6px;flex-wrap:wrap">'+(m>0?'<button class="s" data-pay="'+j.id+'">تسديد</button>':'<span class="ok" style="align-self:center">مسددة</span>')+'<button class="s" data-inv="'+j.id+'">فاتورة</button><button class="s" data-del="'+j.id+'">حذف</button></div></div>'
 }
