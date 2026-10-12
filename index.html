@@ -109,12 +109,23 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 </section>
 
 <section id="dtl">
+<div class="box"><label style="margin:0">بحث<input id="dtlq" type="text" placeholder="ابحث باسم الشغلة أو الكود أو القياس"></label></div>
 <div class="box">
 <div style="font-weight:600;margin-bottom:8px">تفاصيل الشغلة</div>
 <label>اسم الشغلة<input id="dtlname" type="text"></label>
 <label>رقم الكود<input id="dtlcode" type="text"></label>
+<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px"><div style="font-weight:600;margin-bottom:6px">قبغ</div>
 <label>قياس الكارتون<input id="dtlsize" type="text" placeholder="مثلاً 70 × 100"></label>
-<label>الطبع<select id="dtlprt"><option>نصف بطال</option><option>بطال</option></select></label>
+<label style="margin:0">كم قطعة تصير على قياس الكارتون<input id="dtlpcs" type="text" inputmode="numeric"></label>
+<label style="margin:8px 0 0">الطبع<select id="dtlb1"><option>نصف بطال</option><option>بطال</option></select></label></div>
+<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px"><div style="font-weight:600;margin-bottom:6px">قاعدة</div>
+<label>قياس الكارتون<input id="dtlsize2" type="text" placeholder="مثلاً 70 × 100"></label>
+<label style="margin:0">كم قطعة تصير على قياس الكارتون<input id="dtlpcs2" type="text" inputmode="numeric"></label>
+<label style="margin:8px 0 0">الطبع<select id="dtlb2"><option>نصف بطال</option><option>بطال</option></select></label></div>
+<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px"><div style="font-weight:600;margin-bottom:6px">توزيع عادي</div>
+<label>قياس الكارتون<input id="dtlsize3" type="text" placeholder="مثلاً 70 × 100"></label>
+<label style="margin:0">كم قطعة تصير على قياس الكارتون<input id="dtlpcs3" type="text" inputmode="numeric"></label>
+<label style="margin:8px 0 0">الطبع<select id="dtlb3"><option>نصف بطال</option><option>بطال</option></select></label></div>
 <button class="p" id="dtladd">احفظ التفاصيل</button>
 </div>
 <div class="box" id="dtll"></div>
@@ -309,8 +320,9 @@ $("kck").onclick=function(e){var b=e.target.closest("button");if(!b)return;var k
 $("kcx").onclick=function(){$("kc").classList.remove("on")};
 $("kccp").onclick=function(){var v=kcEval();if(v==null){alert("اكتب عملية صحيحة");return}copyText(String(Math.round(v*10000)/10000),this)};
 function dtls(){S.dtl=S.dtl||[];return S.dtl}
-function dtlRender(){var L=dtls();$("dtll").innerHTML=L.length?L.map(function(x){return '<div class="it"><div><b class="jn">'+esc(x.name||x.code)+'</b>'+(x.name?'<small>رقم الكود: '+esc(x.code)+'</small>':'')+'<small>قياس الكارتون: '+esc(x.size||"—")+'</small><small>الطبع: <b>'+esc(x.prt)+'</b> · '+x.date+'</small></div><div><button class="s" data-ddel="'+x.id+'">حذف</button></div></div>'}).join(""):'<div class="empty">ما أكو تفاصيل محفوظة.</div>'}
-$("dtladd").onclick=function(){var c=$("dtlcode").value.trim();if(!c){alert("اكتب رقم الكود");return}dtls().unshift({id:suid(),date:new Date().toISOString().slice(0,10),name:$("dtlname").value.trim(),code:c,size:$("dtlsize").value.trim(),prt:$("dtlprt").value});$("dtlcode").value=$("dtlsize").value=$("dtlname").value="";save();dtlRender()};
+function dtlRender(){var q=$("dtlq").value.trim().toLowerCase(),L=dtls().filter(function(x){return !q||[x.name,x.code,x.size,x.size2,x.size3,x.dist,x.prt].join(" ").toLowerCase().indexOf(q)>-1});$("dtll").innerHTML=L.length?L.map(function(x){return '<div class="it"><div><b class="jn">'+esc(x.name||x.code)+'</b>'+(x.name?'<small>رقم الكود: '+esc(x.code)+'</small>':'')+'<small>قبغ: قياس الكارتون '+esc(x.size||"—")+(x.pcs?' · '+nf(x.pcs)+' قطعة على القياس':'')+(x.b1?' · '+esc(x.b1):'')+'</small>'+((x.size2||x.pcs2)?'<small>قاعدة: قياس الكارتون '+esc(x.size2||"—")+(x.pcs2?' · '+nf(x.pcs2)+' قطعة على القياس':'')+(x.b2?' · '+esc(x.b2):'')+'</small>':'')+(x.dist?'<small>توزيع عادي: '+esc(x.dist)+'</small>':'')+((x.size3||x.pcs3)?'<small>توزيع عادي: قياس الكارتون '+esc(x.size3||"—")+(x.pcs3?' · '+nf(x.pcs3)+' قطعة على القياس':'')+(x.b3?' · '+esc(x.b3):'')+'</small>':'')+'<small>'+(x.prt?'الطبع: <b>'+esc(x.prt)+'</b> · ':'')+x.date+'</small></div><div><button class="s" data-ddel="'+x.id+'">حذف</button></div></div>'}).join(""):'<div class="empty">ما أكو تفاصيل محفوظة.</div>'}
+$("dtlq").oninput=dtlRender;
+$("dtladd").onclick=function(){var c=$("dtlcode").value.trim();if(!c){alert("اكتب رقم الكود");return}dtls().unshift({id:suid(),date:new Date().toISOString().slice(0,10),name:$("dtlname").value.trim(),code:c,size:$("dtlsize").value.trim(),pcs:num($("dtlpcs").value),size2:$("dtlsize2").value.trim(),size3:$("dtlsize3").value.trim(),pcs3:num($("dtlpcs3").value),b1:$("dtlb1").value,b2:$("dtlb2").value,b3:$("dtlb3").value,pcs2:num($("dtlpcs2").value),});$("dtlcode").value=$("dtlsize").value=$("dtlname").value=$("dtlpcs").value=$("dtlsize2").value=$("dtlpcs2").value=$("dtlsize3").value=$("dtlpcs3").value="";save();dtlRender()};
 var SUPOPEN={};
 function sups(){S.sup=S.sup||[];return S.sup}
 function sbal(su){var b={IQD:0,USD:0};su.tx.forEach(function(t){b[t.cur]+=t.type==="debt"?t.amt:-t.amt});return b}
