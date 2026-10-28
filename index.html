@@ -103,6 +103,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <div class="row"><label>النوع<select id="suptype"><option value="debt">دين جديد (علينا)</option><option value="pay">تسديد (دفعنا)</option></select></label>
 <label>العملة<select id="supcur"><option value="IQD">دينار</option><option value="USD">دولار</option></select></label></div>
 <label>نوع الخدمة<select id="supwork"><option>كارتون</option><option>قالب</option><option>بليت</option><option>سلفان</option><option>قص</option><option>لزك</option><option>يونس</option><option>طبع</option></select></label>
+<div class="row" id="supcartn"><label>عدد البند<input id="supbn" type="text" inputmode="decimal"></label><label>سعر البند<input id="supbp" type="text" inputmode="decimal"></label></div>
 <div class="row"><label>المبلغ<input id="supamt" type="text" inputmode="decimal"></label><label>اسم الشغلة<input id="supnote"></label></div>
 <button class="p" id="supmv">سجّل</button>
 </div>
@@ -334,6 +335,8 @@ function imgDel(id){idbOpen(function(db){if(!db)return;try{db.transaction("img",
 function imgGet(id,cb){idbOpen(function(db){if(!db){cb(null);return}try{var q=db.transaction("img").objectStore("img").get(id);q.onsuccess=function(){cb(q.result||null)};q.onerror=function(){cb(null)}}catch(e){cb(null)}})}
 function loadImgs(){document.querySelectorAll("#dtll img[data-img]").forEach(function(im){imgGet(im.dataset.img,function(u){if(u)im.src=u})})}
 document.addEventListener("click",function(e){var t=e.target;if(t.tagName==="IMG"&&t.dataset&&t.dataset.img){var big=t.style.width==="100%";t.style.width=big?"90px":"100%";t.style.height=big?"90px":"auto"}});
+function supCalc(){var c=$("supwork").value==="كارتون";$("supcartn").style.display=c?"grid":"none";if(c){var a=num($("supbn").value)*num($("supbp").value);if(a>0){$("supamt").value=String(Math.round(a*100)/100);fmtEl($("supamt"))}}}
+$("supwork").onchange=supCalc;$("supbn").oninput=supCalc;$("supbp").oninput=supCalc;supCalc();
 var JEID=null;
 function openJe(id){var j=S.jobs.filter(function(x){return x.id===id})[0];if(!j)return;JEID=id;$("jename").value=j.name||"";$("jeqty").value=j.qty;$("jeprice").value=j.price;$("jepaid").value=j.paid;$("jeprofit").value=Math.round((j.price-j.cost)*100)/100;document.querySelectorAll("#je input").forEach(fmtEl);$("je").classList.add("on")}
 $("jesave").onclick=function(){var j=S.jobs.filter(function(x){return x.id===JEID})[0];if(!j)return;var pr=num($("jeprice").value);j.name=$("jename").value.trim()||j.name;j.qty=num($("jeqty").value);j.price=pr;j.paid=num($("jepaid").value);j.cost=Math.round((pr-num($("jeprofit").value))*100)/100;save();jobs();$("je").classList.remove("on")};
@@ -350,15 +353,15 @@ function supRender(){var L=sups(),tot={IQD:0,USD:0},cv=$("supsel").value;
  $("suptot").innerHTML='<div><small>إجمالي المتبقي علينا (دينار)</small><b class="bad">'+nf(tot.IQD)+'</b></div><div><small>إجمالي المتبقي علينا (دولار)</small><b class="bad">$'+nf(tot.USD)+'</b></div>';
  $("supl").innerHTML=L.length?L.map(function(x){var b=sbal(x),txs=x.tx.slice().reverse(),open=SUPOPEN[x.id],shown=open?txs:txs.slice(0,4),owe=b.IQD>0||b.USD>0;
   return '<div class="box"><div class="it" style="border-bottom:2px solid var(--gold);padding-top:0"><div><b style="color:var(--bad);font-size:19px">'+esc(x.name)+'</b>'+'</div><div style="text-align:left"><small>المتبقي علينا</small><b class="'+(owe?'bad':'ok')+'" style="font-size:17px">'+(owe?fbal(b):'مسدد')+'</b></div></div>'+
-  (shown.length?shown.map(function(t){return '<div class="it"><div><b class="'+(t.type==="debt"?'bad':'ok')+'">'+(t.type==="debt"?'دين':'تسديد')+'</b><small>'+t.date+(t.work?' · '+esc(t.work):'')+(t.note?' · '+esc(t.note):'')+'</small></div><div>'+(t.cur==="USD"?'$':'')+nf(t.amt)+(t.cur==="IQD"?' د.ع':'')+' <button class="s" data-stx="'+x.id+'|'+t.id+'">حذف</button></div></div>'}).join(""):'<div class="empty">ما أكو حركات.</div>')+
+  (shown.length?shown.map(function(t){return '<div class="it"><div><b class="'+(t.type==="debt"?'bad':'ok')+'">'+(t.type==="debt"?'دين':'تسديد')+'</b><small>'+t.date+(t.work?' · '+esc(t.work):'')+(t.bn&&t.bp?' · '+nf(t.bn)+' بند × '+nf(t.bp):'')+(t.note?' · '+esc(t.note):'')+'</small></div><div>'+(t.cur==="USD"?'$':'')+nf(t.amt)+(t.cur==="IQD"?' د.ع':'')+' <button class="s" data-stx="'+x.id+'|'+t.id+'">حذف</button></div></div>'}).join(""):'<div class="empty">ما أكو حركات.</div>')+
   '<div style="display:flex;gap:6px;margin-top:8px">'+(txs.length>4?'<button class="s" data-sopen="'+x.id+'">'+(open?'إخفاء':'كل الحركات ('+txs.length+')')+'</button>':'')+'<button class="s" data-sdel="'+x.id+'">حذف المجهز</button></div></div>'}).join(""):'<div class="empty">ما أكو مجهزين. أضف أول مجهز من الأعلى.</div>'}
 function suid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
 $("supadd").onclick=function(){var n=$("supn").value.trim();if(!n){alert("اكتب اسم المجهز");return}
  sups().push({id:suid(),name:n,tx:[]});$("supn").value="";save();supRender()};
 $("supmv").onclick=function(){var id=$("supsel").value,a=num($("supamt").value),su=sups().filter(function(x){return x.id===id})[0];
  if(!su){alert("اختر مجهز");return}if(!(a>0)){alert("اكتب مبلغ صحيح");return}
- su.tx.push({id:suid(),date:new Date().toISOString().slice(0,10),type:$("suptype").value,amt:a,cur:$("supcur").value,work:$("supwork").value,note:$("supnote").value.trim()});
- $("supamt").value=$("supnote").value="";save();supRender()};
+ su.tx.push({id:suid(),date:new Date().toISOString().slice(0,10),type:$("suptype").value,amt:a,cur:$("supcur").value,work:$("supwork").value,note:$("supnote").value.trim(),bn:$("supwork").value==="كارتون"?num($("supbn").value):0,bp:$("supwork").value==="كارتون"?num($("supbp").value):0});
+ $("supamt").value=$("supnote").value=$("supbn").value=$("supbp").value="";save();supRender()};
 function setStat(ok){$("savestat").textContent=ok?"✓ محفوظ بحسابك (تفتحه من أي جهاز)":"محفوظ على هذا الجهاز فقط — خذ نسخة احتياطية بين فترة وفترة"}
 function setStat(ok){$("savestat").textContent=ok?"✓ محفوظ على جهازك وبحسابك":"✓ محفوظ على هذا الجهاز"}
 function idbOpen(cb){try{var r=indexedDB.open("ban-print",2);r.onupgradeneeded=function(){var d=r.result;if(!d.objectStoreNames.contains("kv"))d.createObjectStore("kv");if(!d.objectStoreNames.contains("img"))d.createObjectStore("img")};r.onsuccess=function(){cb(r.result)};r.onerror=function(){cb(null)}}catch(e){cb(null)}}
