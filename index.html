@@ -47,7 +47,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @media print{body>*:not(#inv){display:none!important}#inv{position:static;padding:0;background:#fff;overflow:visible}.noprint{display:none!important}#invbody{max-width:none;padding:0;border-radius:0}}
 #kc{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:12px}#kc.on{display:flex}#kcb{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;width:100%;max-width:340px}#kcd{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:left;direction:ltr;min-height:76px}#kce{font-size:15px;color:var(--mute);min-height:22px;word-break:break-all}#kcr{font-size:30px;font-weight:700;min-height:42px}#kck{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}#kck button{padding:15px 0;font-size:20px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-family:inherit;cursor:pointer}#kck button.op{background:var(--main);color:var(--on);border-color:var(--main)}
 #je{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:12px;overflow:auto}#je.on{display:flex}#jeb{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;width:100%;max-width:380px}
-#sup .it,#dtl .it{font-size:18px}#sup .it small,#dtl .it small{font-size:16px;line-height:1.7}#sup .it b,#dtl .it b{font-size:19px}#sup label,#dtl label{font-size:16px}#sup .empty,#dtl .empty{font-size:16px}#sup .it small,#dtl .it small{color:#000;font-weight:600}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) #sup .it small,:root:not([data-theme="light"]) #dtl .it small{color:#fff}}:root[data-theme="dark"] #sup .it small,:root[data-theme="dark"] #dtl .it small{color:#fff}
+#sup .it,#dtl .it{font-size:18px}#sup .it small,#dtl .it small{font-size:16px;line-height:1.7}#sup .it b,#dtl .it b{font-size:19px}#sup label,#dtl label{font-size:16px}#sumtab .it{font-size:18px}#sumtab .it b{font-size:19px}#sup .empty,#dtl .empty{font-size:16px}#sup .it small,#dtl .it small{color:#000;font-weight:600}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) #sup .it small,:root:not([data-theme="light"]) #dtl .it small{color:#fff}}:root[data-theme="dark"] #sup .it small,:root[data-theme="dark"] #dtl .it small{color:#fff}
 .jn{color:#1E40AF;font-size:17px;font-weight:700}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .jn{color:#8DB8FF}}:root[data-theme="dark"] .jn{color:#8DB8FF}
 .st{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.st>div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px;text-align:center;font-size:13px}.st b{font-size:15px}@media(max-width:600px){.st{grid-template-columns:repeat(2,1fr)}}
 </style>
@@ -56,7 +56,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <main>
 <h1>حساب المطبوعات</h1>
 <div id="savestat" style="font-size:12px;color:var(--mute);margin:-8px 0 10px"></div>
-<nav id="nav"><button data-t="calc" class="on">حاسبة الشغلة</button><button data-t="jobs">الشغلات</button><button data-t="sup">المجهزين</button><button data-t="dtl">تفاصيل</button></nav>
+<nav id="nav"><button data-t="calc" class="on">حاسبة الشغلة</button><button data-t="jobs">الشغلات</button><button data-t="sup">المجهزين</button><button data-t="dtl">تفاصيل</button><button data-t="sumtab">النتائج</button></nav>
 
 <section id="calc" class="on">
 <div class="box">
@@ -110,6 +110,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <div class="sum" id="suptot"></div>
 <div id="supl"></div>
 </section>
+
+<section id="sumtab"><div id="sumbody"></div></section>
 
 <section id="dtl">
 <div class="box"><label style="margin:0">بحث<input id="dtlq" type="text" placeholder="ابحث باسم الشغلة أو الكود أو القياس"></label></div>
@@ -235,7 +237,7 @@ document.addEventListener("click",function(e){var b=e.target.closest("button");i
  if(d.paste)pasteTo(d.paste);if(d.kc)openKc();if(d.je)openJe(d.je);if(d.copyid&&$(d.copyid).value)copyText($(d.copyid).value,b);if(d.copy)copyText(decodeURIComponent(d.copy),b);
  if(d.cinv)showInvMulti(decodeURIComponent(d.cinv));
  if(d.inv){var jj=S.jobs.find(function(x){return x.id===d.inv});if(jj)showInv({phone:jj.phone,gov:jj.gov,addr:jj.addr,name:jj.name,cust:jj.cust,qty:jj.qty,sheets:jj.sheets,det:jj.det||(jj.items||[]).map(function(t){return{k:t,t:t}}),gsm:jj.gsm,price:jj.price,paid:jj.paid,date:jj.date,id:jj.id})}
- if(d.t){document.querySelectorAll("nav button,section").forEach(function(x){x.classList.remove("on")});b.classList.add("on");$(d.t).classList.add("on");if(d.t==="jobs")jobs();if(d.t==="sup")supRender();if(d.t==="dtl")dtlRender()}
+ if(d.t){document.querySelectorAll("nav button,section").forEach(function(x){x.classList.remove("on")});b.classList.add("on");$(d.t).classList.add("on");if(d.t==="jobs")jobs();if(d.t==="sup")supRender();if(d.t==="dtl")dtlRender();if(d.t==="sumtab")sumRender()}
  if(d.pay){var j=S.jobs.find(function(x){return x.id===d.pay}),rem=j.price-j.paid,a=+prompt("مبلغ التسديد (المتبقي "+n(rem)+")",rem);if(a>0){j.paid+=Math.min(a,rem);save();jobs()}}
  if(d.del&&confirm("تحذف هذه الشغلة؟")){S.jobs=S.jobs.filter(function(x){return x.id!==d.del});save();jobs()}});
 $("save").onclick=function(){
@@ -337,6 +339,15 @@ function loadImgs(){document.querySelectorAll("#dtll img[data-img]").forEach(fun
 document.addEventListener("click",function(e){var t=e.target;if(t.tagName==="IMG"&&t.dataset&&t.dataset.img){var big=t.style.width==="100%";t.style.width=big?"90px":"100%";t.style.height=big?"90px":"auto"}});
 function supCalc(){var c=$("supwork").value==="كارتون";$("supcartn").style.display=c?"grid":"none";if(c){var a=num($("supbn").value)*num($("supbp").value);if(a>0){$("supamt").value=String(Math.round(a*100)/100);fmtEl($("supamt"))}}}
 $("supwork").onchange=supCalc;$("supbn").oninput=supCalc;$("supbp").oninput=supCalc;supCalc();
+function sumRender(){var t=0,pd=0,pf=0;S.jobs.forEach(function(j){t+=j.price;pd+=j.paid;pf+=j.price-j.cost});var rem=t-pd;
+ var di={IQD:0,USD:0},pi={IQD:0,USD:0};sups().forEach(function(x){x.tx.forEach(function(tx){(tx.type==="debt"?di:pi)[tx.cur]+=tx.amt})});
+ var ri={IQD:di.IQD-pi.IQD,USD:di.USD-pi.USD},rt=S.paper.rate||0,ow=ri.IQD+ri.USD*rt,net=rem-ow;
+ function row(l,v,c){return '<div class="it"><b>'+l+'</b><b class="'+(c||'')+'">'+v+'</b></div>'}
+ function dd(o){var a=[];if(o.IQD)a.push(nf(o.IQD)+" د.ع");if(o.USD)a.push(nf(o.USD)+" دولار");return a.join(" + ")||"0"}
+ function hd(x){return '<div class="it" style="border-bottom:2px solid var(--gold);padding-top:0"><b style="color:var(--bad);font-size:21px">'+x+'</b></div>'}
+ $("sumbody").innerHTML='<div class="box">'+hd("الأشغال (الزبائن)")+row("مجموع الأشغال",nf(t)+" د.ع")+row("المقبوض (العربونات)",nf(pd)+" د.ع","ok")+row("المطلوب لنا من الزبائن",nf(rem)+" د.ع",rem>0?"bad":"ok")+row("إجمالي الأرباح",nf(pf)+" د.ع","ok")+'</div>'+
+ '<div class="box">'+hd("المجهزين")+row("إجمالي الديون",dd(di))+row("المسدد للمجهزين",dd(pi),"ok")+row("المطلوب علينا",dd(ri),(ri.IQD>0||ri.USD>0)?"bad":"ok")+'</div>'+
+ '<div class="box">'+hd("الخلاصة")+row("المطلوب لنا",nf(rem)+" د.ع")+row("المطلوب علينا"+(ri.USD&&rt?" (الدولار بسعر "+nf(rt)+")":""),nf(ow)+" د.ع")+row("الصافي (لنا − علينا)",nf(net)+" د.ع",net>=0?"ok":"bad")+'<div class="empty" style="font-size:14px">الأرباح محسوبة من الأشغال، وتكلفة المجهزين داخلة فيها أصلاً، فما تُطرح ديونهم منها مرة ثانية.</div></div>'}
 var JEID=null;
 function openJe(id){var j=S.jobs.filter(function(x){return x.id===id})[0];if(!j)return;JEID=id;$("jename").value=j.name||"";$("jeqty").value=j.qty;$("jeprice").value=j.price;$("jepaid").value=j.paid;$("jeprofit").value=Math.round((j.price-j.cost)*100)/100;document.querySelectorAll("#je input").forEach(fmtEl);$("je").classList.add("on")}
 $("jesave").onclick=function(){var j=S.jobs.filter(function(x){return x.id===JEID})[0];if(!j)return;var pr=num($("jeprice").value);j.name=$("jename").value.trim()||j.name;j.qty=num($("jeqty").value);j.price=pr;j.paid=num($("jepaid").value);j.cost=Math.round((pr-num($("jeprofit").value))*100)/100;save();jobs();$("je").classList.remove("on")};
