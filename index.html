@@ -86,6 +86,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <label>المقدم المدفوع<input id="adv" type="text" min="0" value="0" inputmode="numeric"></label>
 <label>&nbsp;<button class="p" id="save" style="margin-top:0">احفظ الشغلة</button></label>
 </div>
+<label style="display:flex;gap:8px;align-items:center;margin:10px 0 0;color:var(--ink)"><input type="checkbox" id="mgcheck" style="width:22px;height:22px"> دمج مع آخر شغلة لنفس الزبون (قبغ + قاعدة)</label>
+<button class="s" id="save2" style="width:100%;padding:12px;margin-top:10px">حفظ وإضافة شغلة جديدة لنفس الزبون</button>
 <button class="s" id="invbtn" style="width:100%;padding:12px;margin-top:10px">فاتورة للزبون (بدون أسعار التفاصيل)</button>
 </div>
 <button class="s" id="reset" style="width:100%;padding:12px">تصفير كل المدخلات</button>
@@ -244,9 +246,11 @@ document.addEventListener("click",function(e){var b=e.target.closest("button");i
 $("save").onclick=function(){
  if(!cur.price){alert("فعّل عملية واحدة على الأقل واكتب سعرها");return}
  var adv=Math.min(num($("adv").value),cur.price);
+ var mp=$("mgcheck").checked&&cur.cust?S.jobs.filter(function(j){return (j.cust||"")===cur.cust})[0]:null;
+ if(mp){mp.name=mp.name+" + "+(cur.name||"شغلة");mp.price+=cur.price;mp.cost+=cur.cost;mp.paid+=adv;mp.qty=Math.max(mp.qty||0,cur.qty);mp.det=(mp.det||[]).concat(cur.det||[]);if(!mp.gsm&&cur.gsm)mp.gsm=cur.gsm;if(!mp.phone&&cur.phone)mp.phone=cur.phone;if(!mp.addr&&cur.addr)mp.addr=cur.addr}else
  S.jobs.unshift({id:Date.now().toString(36),date:new Date().toISOString().slice(0,10),name:cur.name||"شغلة بدون اسم",cust:cur.cust,qty:cur.qty,cost:cur.cost,price:cur.price,paid:adv,det:cur.det,sheets:cur.sheets,gsm:cur.gsm,phone:cur.phone,gov:cur.gov,addr:cur.addr});
- save();$("jn").value="";$("adv").value=0;S.form.jn="";S.form.adv="0";save();
- document.querySelector('nav [data-t="jobs"]').click();
+ save();$("jn").value="";$("adv").value=0;S.form.jn="";S.form.adv="0";$("mgcheck").checked=false;save();
+ if(!window.NOGO)document.querySelector('nav [data-t="jobs"]').click();
 };
 function jobs(){
  var t=0,rem=0,pft=0;S.jobs.forEach(function(j){t+=j.price;rem+=j.price-j.paid;pft+=j.price-j.cost});
@@ -350,7 +354,8 @@ function sumRender(){var t=0,pd=0,pf=0;S.jobs.forEach(function(j){t+=j.price;pd+
  '<div class="box">'+hd("المجهزين")+row("إجمالي الديون",dd(di))+row("المسدد للمجهزين",dd(pi),"ok")+row("المطلوب علينا",dd(ri),(ri.IQD>0||ri.USD>0)?"bad":"ok")+'</div>'+
  '<div class="box">'+hd("الخلاصة")+row("المطلوب لنا",nf(rem)+" د.ع")+row("المطلوب علينا"+(ri.USD&&rt?" (الدولار بسعر "+nf(rt)+")":""),nf(ow)+" د.ع")+row("الصافي (لنا − علينا)",nf(net)+" د.ع",net>=0?"ok":"bad")+'<div class="empty" style="font-size:14px">الأرباح محسوبة من الأشغال، وتكلفة المجهزين داخلة فيها أصلاً، فما تُطرح ديونهم منها مرة ثانية.</div></div>'}
 var MERGE={};
-function mgIds(){return Object.keys(MERGE).filter(function(k){return MERGE[k]&&S.jobs.some(function(j){return j.id===k})})}
+$("save2").onclick=function(){if(!cur.price){alert("فعّل عملية واحدة على الأقل واكتب سعرها");return}window.NOGO=1;$("save").onclick();window.NOGO=0;var d={jn:"",qty:"",adv:"0",margin:"0"};for(var k in d){$(k).value=d[k];S.form[k]=d[k]}save();calc();alert("تم حفظ الشغلة. تقدر تضيف الشغلة التالية لنفس الزبون.")};
+function mgIds(){var M=window.MERGE||{};return Object.keys(M).filter(function(k){return M[k]&&S.jobs.some(function(j){return j.id===k})})}
 function updMerge(){var n=mgIds().length,b=$("mgbtn");b.style.display=n>=2?"":"none";b.textContent="دمج الشغلات المحددة ("+n+") في شغلة واحدة"}
 document.addEventListener("change",function(e){var t=e.target;if(t.dataset&&t.dataset.mg){MERGE[t.dataset.mg]=t.checked;updMerge()}});
 $("mgbtn").onclick=function(){var ids=mgIds(),js=S.jobs.filter(function(j){return ids.indexOf(j.id)>-1});if(js.length<2)return;var nm=prompt("اسم الشغلة المدموجة",js.map(function(j){return j.name}).join(" + "));if(!nm)return;
