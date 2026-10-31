@@ -139,7 +139,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 </section>
 
 <section id="jobs">
-<button class="p" id="jeadd" style="margin-bottom:10px">+ إضافة شغلة يدوياً</button>
+<button class="s" id="mgbtn" style="width:100%;padding:12px;margin-bottom:10px;display:none"></button>
 <div class="sum" style="grid-template-columns:repeat(3,1fr)"><div><small>مجموع الشغلات</small><b id="t1">0</b></div><div><small>المتبقي على الزبائن</small><b id="t2" class="bad">0</b></div><div><small>صافي الأرباح</small><b id="t3" class="ok">0</b></div></div>
 <div class="box" id="jl"></div>
 <div class="tools"><button class="s" id="exp">نسخة احتياطية</button><button class="s" id="imp">استرجاع نسخة</button><input type="file" id="file" accept="application/json" hidden></div>
@@ -250,14 +250,14 @@ $("save").onclick=function(){
 };
 function jobs(){
  var t=0,rem=0,pft=0;S.jobs.forEach(function(j){t+=j.price;rem+=j.price-j.paid;pft+=j.price-j.cost});
- $("t1").textContent=nf(t);$("t2").textContent=nf(rem);$("t3").textContent=nf(pft);
+ $("t1").textContent=nf(t);$("t2").textContent=nf(rem);$("t3").textContent=nf(pft);if(window.updMerge)updMerge();
  var gs={},ord=[];S.jobs.forEach(function(j){var k=j.cust||"";if(!gs[k]){gs[k]=[];ord.push(k)}gs[k].push(j)});
  $("jl").innerHTML=S.jobs.length?ord.map(function(k){var g=gs[k],gt=0,gr=0;g.forEach(function(j){gt+=j.price;gr+=j.price-j.paid});
   return '<div style="margin-bottom:12px"><div class="it" style="border-bottom:2px solid var(--gold)"><div><b style="color:var(--bad);font-size:19px;font-weight:700">'+esc(k||"بدون زبون")+'</b><small>'+g.length+' عمل · المجموع '+nf(gt)+' · المتبقي '+nf(gr)+'</small>'+(function(){var q=g.filter(function(j){return j.phone||j.gov||j.addr})[0]||{},a=[q.gov,q.addr].filter(Boolean).join(" - ");return (q.phone?'<small>'+esc(q.phone)+' <button class="s" data-copy="'+encodeURIComponent(q.phone)+'">نسخ الهاتف</button></small>':'')+(a?'<small>'+esc(a)+' <button class="s" data-copy="'+encodeURIComponent(a)+'">نسخ العنوان</button></small>':'')})()+'</div>'+(k?'<button class="s" data-cinv="'+encodeURIComponent(k)+'">فاتورة الزبون</button>':'')+'</div>'+g.map(jobRow).join("")+'</div>'}).join(""):'<div class="empty">ما أكو شغلات محفوظة. احسب شغلة واضغط "احفظ الشغلة".</div>';
 }
 function jobRow(j){var m=j.price-j.paid,pf=j.price-j.cost;
  function st(l,v,c){return '<div><small style="display:block;color:var(--mute)">'+l+'</small><b class="'+(c||'')+'">'+nf(v)+'</b></div>'}
- return '<div class="it" style="flex-direction:column;align-items:stretch"><div style="display:flex;justify-content:space-between;gap:8px"><b class="jn">'+esc(j.name)+'</b><small>'+nf(j.qty)+' قطعة · '+j.date+'</small></div>'+
+ return '<div class="it" style="flex-direction:column;align-items:stretch"><div style="display:flex;justify-content:space-between;gap:8px"><label style="display:flex;gap:8px;align-items:center;margin:0;color:var(--ink)"><input type="checkbox" data-mg="'+j.id+'" style="width:22px;height:22px"'+(window.MERGE&&MERGE[j.id]?' checked':'')+'><b class="jn">'+esc(j.name)+'</b></label><small>'+nf(j.qty)+' قطعة · '+j.date+'</small></div>'+
  '<div class="st">'+st("السعر",j.price)+st("العربون",j.paid,"ok")+st("المتبقي",m,m>0?"bad":"ok")+st("الربح",pf,"ok")+'</div>'+
  '<div style="display:flex;gap:6px;flex-wrap:wrap">'+(m>0?'<button class="s" data-pay="'+j.id+'">تسديد</button>':'<span class="ok" style="align-self:center">مسددة</span>')+'<button class="s" data-je="'+j.id+'">تعديل</button><button class="s" data-inv="'+j.id+'">فاتورة</button><button class="s" data-del="'+j.id+'">حذف</button></div></div>'
 }
@@ -349,10 +349,19 @@ function sumRender(){var t=0,pd=0,pf=0;S.jobs.forEach(function(j){t+=j.price;pd+
  $("sumbody").innerHTML='<div class="box">'+hd("الأشغال (الزبائن)")+row("مجموع الأشغال",nf(t)+" د.ع")+row("المقبوض (العربونات)",nf(pd)+" د.ع","ok")+row("المطلوب لنا من الزبائن",nf(rem)+" د.ع",rem>0?"bad":"ok")+row("إجمالي الأرباح",nf(pf)+" د.ع","ok")+'</div>'+
  '<div class="box">'+hd("المجهزين")+row("إجمالي الديون",dd(di))+row("المسدد للمجهزين",dd(pi),"ok")+row("المطلوب علينا",dd(ri),(ri.IQD>0||ri.USD>0)?"bad":"ok")+'</div>'+
  '<div class="box">'+hd("الخلاصة")+row("المطلوب لنا",nf(rem)+" د.ع")+row("المطلوب علينا"+(ri.USD&&rt?" (الدولار بسعر "+nf(rt)+")":""),nf(ow)+" د.ع")+row("الصافي (لنا − علينا)",nf(net)+" د.ع",net>=0?"ok":"bad")+'<div class="empty" style="font-size:14px">الأرباح محسوبة من الأشغال، وتكلفة المجهزين داخلة فيها أصلاً، فما تُطرح ديونهم منها مرة ثانية.</div></div>'}
+var MERGE={};
+function mgIds(){return Object.keys(MERGE).filter(function(k){return MERGE[k]&&S.jobs.some(function(j){return j.id===k})})}
+function updMerge(){var n=mgIds().length,b=$("mgbtn");b.style.display=n>=2?"":"none";b.textContent="دمج الشغلات المحددة ("+n+") في شغلة واحدة"}
+document.addEventListener("change",function(e){var t=e.target;if(t.dataset&&t.dataset.mg){MERGE[t.dataset.mg]=t.checked;updMerge()}});
+$("mgbtn").onclick=function(){var ids=mgIds(),js=S.jobs.filter(function(j){return ids.indexOf(j.id)>-1});if(js.length<2)return;var nm=prompt("اسم الشغلة المدموجة",js.map(function(j){return j.name}).join(" + "));if(!nm)return;
+ var m={id:suid(),date:js.reduce(function(a,j){return j.date>a?j.date:a},""),name:nm,cust:js[0].cust||"",phone:"",addr:"",gov:"",qty:0,price:0,paid:0,cost:0,det:[],gsm:0};
+ js.forEach(function(j){m.qty=Math.max(m.qty,j.qty||0);m.price+=j.price;m.paid+=j.paid;m.cost+=j.cost;m.det=m.det.concat(j.det||[]);if(!m.phone&&j.phone)m.phone=j.phone;if(!m.addr&&j.addr)m.addr=j.addr;if(!m.gov&&j.gov)m.gov=j.gov;if(!m.gsm&&j.gsm)m.gsm=j.gsm});
+ S.jobs=S.jobs.filter(function(j){return ids.indexOf(j.id)<0});S.jobs.unshift(m);MERGE={};save();jobs()};
 var JEID=null;
 function openJe(id){var j=id?S.jobs.filter(function(x){return x.id===id})[0]:{name:"",cust:"",qty:"",price:"",paid:"",cost:0};if(!j)return;JEID=id;$("jecust").value=j.cust||"";$("jephone").value=j.phone||"";$("jeaddr").value=j.addr||"";$("jename").value=j.name||"";$("jeqty").value=j.qty;$("jeprice").value=j.price;$("jepaid").value=j.paid;$("jeprofit").value=Math.round((j.price-j.cost)*100)/100;document.querySelectorAll("#je input").forEach(fmtEl);$("je").classList.add("on")}
 $("jesave").onclick=function(){var j=JEID?S.jobs.filter(function(x){return x.id===JEID})[0]:null;if(!j){if(!$("jename").value.trim()){alert("اكتب اسم الشغلة");return}j={id:suid(),date:new Date().toISOString().slice(0,10),name:"",cust:"",qty:0,price:0,paid:0,cost:0,det:[],gsm:0};S.jobs.unshift(j)}var pr=num($("jeprice").value);j.cust=$("jecust").value.trim();j.phone=$("jephone").value.trim();j.addr=$("jeaddr").value.trim();j.name=$("jename").value.trim()||j.name;j.qty=num($("jeqty").value);j.price=pr;j.paid=num($("jepaid").value);j.cost=Math.round((pr-num($("jeprofit").value))*100)/100;save();jobs();$("je").classList.remove("on")};
-$("jeadd").onclick=function(){openJe(null)};
+
+
 $("jecancel").onclick=function(){$("je").classList.remove("on")};
 var SUPOPEN={};
 function sups(){S.sup=S.sup||[];return S.sup}
