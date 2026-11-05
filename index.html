@@ -56,7 +56,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <main>
 <h1>حساب المطبوعات</h1>
 <div id="savestat" style="font-size:12px;color:var(--mute);margin:-8px 0 10px"></div>
-<nav id="nav"><button data-t="calc" class="on">حاسبة الشغلة</button><button data-t="jobs">الشغلات</button><button data-t="sup">المجهزين</button><button data-t="dtl">تفاصيل</button></nav>
+<nav id="nav"><button data-t="calc" class="on">حاسبة الشغلة</button><button data-t="jobs">الشغلات</button><button data-t="sup">المجهزين</button><button data-t="dtl">تفاصيل</button><button data-t="cinv">فاتورة الزبون</button></nav>
 
 <section id="calc" class="on">
 <div class="box"><label style="margin:0">قبغ مع قاعدة<select id="mgsel"><option value="">بدون</option><option value="1">قبغ مع قاعدة (مدخلات القاعدة منفصلة وتنجمع بالسعر)</option></select></label></div>
@@ -64,7 +64,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <div class="box">
 <div class="row">
 <label>اسم الشغلة<input id="jn" placeholder="مثلاً: علب عطور"></label>
-<label>الزبون<input id="jc"></label>
+<label>الزبون<input id="jc" list="cunames"><datalist id="cunames"></datalist></label>
 </div>
 <div style="display:flex;gap:6px;align-items:end;margin-bottom:8px"><label style="flex:1;margin:0">رقم هاتف الزبون<input id="jp" type="text" inputmode="tel"></label><button class="s" type="button" data-paste="jp" style="height:46px">لصق</button><button class="s" type="button" data-copyid="jp" style="height:46px">نسخ</button></div>
 <label>المحافظة<select id="jg"><option value="">اختر المحافظة</option><option>بغداد</option><option>البصرة</option><option>نينوى</option><option>أربيل</option><option>السليمانية</option><option>دهوك</option><option>كركوك</option><option>الأنبار</option><option>ديالى</option><option>صلاح الدين</option><option>بابل</option><option>كربلاء</option><option>النجف</option><option>القادسية</option><option>واسط</option><option>ميسان</option><option>ذي قار</option><option>المثنى</option><option>حلبجة</option></select></label>
@@ -112,6 +112,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 </div>
 <div class="sum" id="suptot"></div>
 <div id="supl"></div>
+</section>
+
+<section id="cinv">
+<div class="box"><div style="font-weight:600;margin-bottom:8px">إضافة زبون</div>
+<label>اسم الزبون<input id="cuname" type="text"></label>
+<label>رقم الهاتف<input id="cuphone" type="text" inputmode="tel"></label>
+<label>العنوان<input id="cuaddr" type="text"></label>
+<button class="p" id="cuadd">أضف الزبون</button></div>
+<div id="culist"></div>
 </section>
 
 <section id="dtl">
@@ -259,9 +268,9 @@ document.addEventListener("click",function(e){var b=e.target.closest("button");i
  if(d.sopen){SUPOPEN[d.sopen]=!SUPOPEN[d.sopen];supRender()}
  if(d.ddel&&confirm("تحذف هذه التفاصيل؟")){S.dtl=dtls().filter(function(x){return x.id!==d.ddel});imgDel(d.ddel);save();dtlRender()}
  if(d.paste)pasteTo(d.paste);if(d.kc)openKc();if(d.je)openJe(d.je);if(d.copyid&&$(d.copyid).value)copyText($(d.copyid).value,b);if(d.copy)copyText(decodeURIComponent(d.copy),b);
- if(d.cinv)showInvMulti(decodeURIComponent(d.cinv));
+ if(d.cinv)showInvMulti(decodeURIComponent(d.cinv));if(d.cuinv)showInvMulti(decodeURIComponent(d.cuinv));if(d.cudel&&confirm("تحذف هذا الزبون؟ (شغلاته تبقى محفوظة)")){S.custs=custs().filter(function(x){return x.id!==d.cudel});save();cuRender()}
  if(d.inv){var jj=S.jobs.find(function(x){return x.id===d.inv});if(jj)showInv({phone:jj.phone,gov:jj.gov,addr:jj.addr,name:jj.name,cust:jj.cust,qty:jj.qty,sheets:jj.sheets,det:jj.det||(jj.items||[]).map(function(t){return{k:t,t:t}}),gsm:jj.gsm,price:jj.price,paid:jj.paid,date:jj.date,id:jj.id})}
- if(d.t){document.querySelectorAll("nav button,section").forEach(function(x){x.classList.remove("on")});b.classList.add("on");$(d.t).classList.add("on");if(d.t==="jobs")jobs();if(d.t==="sup")supRender();if(d.t==="dtl")dtlRender()}
+ if(d.t){document.querySelectorAll("nav button,section").forEach(function(x){x.classList.remove("on")});b.classList.add("on");$(d.t).classList.add("on");if(d.t==="jobs")jobs();if(d.t==="sup")supRender();if(d.t==="dtl")dtlRender();if(d.t==="cinv")cuRender()}
  if(d.pay){var j=S.jobs.find(function(x){return x.id===d.pay}),rem=j.price-j.paid,a=+prompt("مبلغ التسديد (المتبقي "+n(rem)+")",rem);if(a>0){j.paid+=Math.min(a,rem);save();jobs()}}
  if(d.del&&confirm("تحذف هذه الشغلة؟")){S.jobs=S.jobs.filter(function(x){return x.id!==d.del});save();jobs()}});
 $("save").onclick=function(){
@@ -301,7 +310,7 @@ $("reset").onclick=function(){
 };
 function renderMulti(){var o=INV,rem=o.price-o.paid;
  $("invbody").innerHTML=(S.logo?'<img src="'+S.logo+'" alt="BAN" style="display:block;max-height:80px;max-width:60%;margin:0 auto 8px">':"")+'<h2 id="offname" contenteditable="true" style="margin:0 0 2px;text-align:center">'+esc(S.office||"BAN")+'</h2><div style="text-align:center;font-size:22px;font-weight:600;margin-bottom:12px">فاتورة</div>'+
- '<div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px"><span>التاريخ: '+o.date+'</span></div>'+irow("الزبون",o.cust)+(function(){var q=o.jobs.filter(function(j){return j.phone||j.gov||j.addr})[0]||{};return (q.phone?irow("الهاتف",q.phone):"")+(q.gov?irow("المحافظة",q.gov):"")+(q.addr?irow("العنوان",q.addr):"")})()+
+ '<div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px"><span>التاريخ: '+o.date+'</span></div>'+irow("الزبون",o.cust)+(function(){var q=o.jobs.filter(function(j){return j.phone||j.gov||j.addr})[0]||(S.custs||[]).filter(function(c){return c.name===o.cust})[0]||{};return (q.phone?irow("الهاتف",q.phone):"")+(q.gov?irow("المحافظة",q.gov):"")+(q.addr?irow("العنوان",q.addr):"")})()+
  o.jobs.map(function(j){var d=jdet(j);return '<div style="padding:8px 0;border-bottom:1px solid #ddd"><div style="display:flex;justify-content:space-between"><b>'+esc(j.name||"—")+'</b><b>'+nf(j.price)+' د.ع</b></div><div style="font-size:14px;color:#444">الكمية: '+nf(j.qty)+' قطعة'+(j.qty>0?' · سعر الوحدة: '+nf(j.price/j.qty)+' د.ع':'')+(d?'<br>'+esc(d):'')+'</div></div>'}).join("")+(o.extra||[]).map(function(x){return '<div style="padding:8px 0;border-bottom:1px solid #ddd"><div style="display:flex;justify-content:space-between"><b>'+esc(x.name)+'</b><b>'+nf(x.price)+' د.ع</b></div>'+(x.qty>0?'<div style="font-size:14px;color:#444">الكمية: '+nf(x.qty)+' قطعة · سعر الوحدة: '+nf(x.price/x.qty)+' د.ع</div>':'')+'</div>'}).join("")+
  '<div style="border-top:2px solid #111;margin-top:14px;padding-top:10px;display:flex;justify-content:space-between;font-size:20px;font-weight:700"><span>إجمالي التكلفة</span><span>'+nf(o.price)+' د.ع</span></div>'+
  (o.paid>0?irow("الدفعة",nf(o.paid)+" د.ع")+irow("المتبقي",rem>0?nf(rem)+" د.ع":"مسدد"):"")}
@@ -387,6 +396,16 @@ function sumRender(){var t=0,pd=0,pf=0;S.jobs.forEach(function(j){t+=j.price;pd+
  $("sumbody").innerHTML='<div class="box">'+hd("الأشغال (الزبائن)")+row("مجموع الأشغال",nf(t)+" د.ع")+row("المقبوض (العربونات)",nf(pd)+" د.ع","ok")+row("المطلوب لنا من الزبائن",nf(rem)+" د.ع",rem>0?"bad":"ok")+row("إجمالي الأرباح",nf(pf)+" د.ع","ok")+'</div>'+
  '<div class="box">'+hd("المجهزين")+row("إجمالي الديون",dd(di))+row("المسدد للمجهزين",dd(pi),"ok")+row("المطلوب علينا",dd(ri),(ri.IQD>0||ri.USD>0)?"bad":"ok")+'</div>'+
  '<div class="box">'+hd("الخلاصة")+row("المطلوب لنا",nf(rem)+" د.ع")+row("المطلوب علينا"+(ri.USD&&rt?" (الدولار بسعر "+nf(rt)+")":""),nf(ow)+" د.ع")+row("الصافي (لنا − علينا)",nf(net)+" د.ع",net>=0?"ok":"bad")+'<div class="empty" style="font-size:14px">الأرباح محسوبة من الأشغال، وتكلفة المجهزين داخلة فيها أصلاً، فما تُطرح ديونهم منها مرة ثانية.</div></div>'}
+function custs(){S.custs=S.custs||[];return S.custs}
+function cuNames(){var n=[];custs().forEach(function(c){n.push(c.name)});S.jobs.forEach(function(j){if(j.cust&&n.indexOf(j.cust)<0)n.push(j.cust)});return n}
+function cuFill(){$("cunames").innerHTML=cuNames().map(function(n){return '<option value="'+esc(n)+'">'}).join("")}
+function cuRender(){var L=cuNames();cuFill();
+ $("culist").innerHTML=L.length?L.map(function(n){var c=custs().filter(function(x){return x.name===n})[0]||{},js=S.jobs.filter(function(j){return (j.cust||"")===n}),t=0,r=0;js.forEach(function(j){t+=j.price;r+=j.price-j.paid});
+  return '<div class="box"><div class="it" style="border-bottom:2px solid var(--gold);padding-top:0"><div><b style="color:var(--bad);font-size:20px">'+esc(n)+'</b>'+(c.phone?'<small>'+esc(c.phone)+' <button class="s" data-copy="'+encodeURIComponent(c.phone)+'">نسخ</button></small>':'')+(c.addr?'<small>'+esc(c.addr)+'</small>':'')+'<small>'+js.length+' شغلة · المجموع '+nf(t)+' · المتبقي '+nf(r)+'</small></div></div><div style="display:flex;gap:6px;margin-top:8px"><button class="p" data-cuinv="'+encodeURIComponent(n)+'" style="flex:1">فاتورة الزبون</button>'+(c.id?'<button class="s" data-cudel="'+c.id+'">حذف</button>':'')+'</div></div>'}).join(""):'<div class="empty">ما أكو زبائن. أضف أول زبون من الأعلى.</div>'}
+$("cuadd").onclick=function(){var n=$("cuname").value.trim();if(!n){alert("اكتب اسم الزبون");return}
+ if(custs().some(function(c){return c.name===n})){alert("هذا الزبون موجود");return}
+ custs().push({id:suid(),name:n,phone:$("cuphone").value.trim(),addr:$("cuaddr").value.trim()});$("cuname").value=$("cuphone").value=$("cuaddr").value="";save();cuRender()};
+$("jc").addEventListener("focus",cuFill);cuFill();
 var MERGE={};
 $("save2").onclick=function(){if(!cur.price){alert("فعّل عملية واحدة على الأقل واكتب سعرها");return}window.NOGO=1;$("save").onclick();window.NOGO=0;var d={jn:"",qty:"",adv:"0",margin:"0"};for(var k in d){$(k).value=d[k];S.form[k]=d[k]}save();calc();alert("تم حفظ الشغلة. تقدر تضيف الشغلة التالية لنفس الزبون.")};
 function mgIds(){var M=window.MERGE||{};return Object.keys(M).filter(function(k){return M[k]&&S.jobs.some(function(j){return j.id===k})})}
