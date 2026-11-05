@@ -120,6 +120,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <label>رقم الهاتف<input id="cuphone" type="text" inputmode="tel"></label>
 <label>العنوان<input id="cuaddr" type="text"></label>
 <button class="p" id="cuadd">أضف الزبون</button></div>
+<button class="s" data-kc="cinv" style="width:100%;padding:12px;margin-bottom:12px">🧮 آلة حاسبة</button>
 <div id="culist"></div>
 </section>
 
@@ -349,7 +350,7 @@ function invMultiUI(){var o=INV,cb='display:flex;gap:8px;align-items:center;marg
  '<label style="margin:0 0 10px">دفعة الزبون (د.ع)<input type="text" inputmode="numeric" id="invpay" value="'+(o.paid||"")+'"></label>'+
  '<div style="font-weight:600;margin:6px 0">الشغلات اللي تدخل بالفاتورة:</div>'+
  o.all.map(function(j){return '<label style="'+cb+'"><input type="checkbox" data-isel="'+j.id+'" style="width:22px;height:22px"'+(o.sel[j.id]?' checked':'')+'> '+esc(j.name)+' — '+nf(j.price)+'</label>'}).join("")+
- '<div style="font-weight:600;margin:12px 0 6px">إضافة شغلة للفاتورة:</div><div class="row"><label>اسم الشغلة<input id="xname" type="text"></label><label>السعر<input id="xprice" type="text" inputmode="decimal"></label></div><div class="row"><label>الكمية<input id="xqty" type="text" inputmode="numeric"></label><button class="p" id="xadd" style="align-self:end;height:46px">إضافة</button></div>'+
+ '<div style="font-weight:600;margin:12px 0 6px">إضافة شغلة للفاتورة:</div><div class="row"><label>اسم الشغلة<input id="xname" type="text"></label><label>السعر<input id="xprice" type="text" inputmode="decimal"></label></div><div class="row"><label>الكمية<input id="xqty" type="text" inputmode="numeric"></label><button class="p" id="xadd" style="align-self:end;height:46px">إضافة</button></div><button class="s" data-kc="x" style="width:100%;margin-bottom:8px">🧮 آلة حاسبة</button>'+
  o.extra.map(function(x,i){return '<div class="it"><div><b>'+esc(x.name)+'</b><small>'+nf(x.qty||0)+' قطعة · '+nf(x.price)+' د.ع</small></div><button class="s" data-xdel="'+i+'">حذف</button></div>'}).join("");
  renderInv()}
 function renderInv(){var o=INV;if(o.multi){renderMulti();return}var rem=o.price-o.paid,it=[];
